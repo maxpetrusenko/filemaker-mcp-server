@@ -3,6 +3,7 @@ export interface FileMakerConfig {
     database: string;
     username: string;
     password: string;
+    gitRepoPath?: string;
 }
 export declare class FileMakerMCP {
     private server;
@@ -48,5 +49,50 @@ export declare class FileMakerMCP {
             text: string;
         }[];
     }>;
+    gitExportLayout(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitExportScript(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitCommitChanges(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitPushChanges(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitPullChanges(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitStatus(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    gitDiff(args: any): Promise<{
+        content: {
+            type: string;
+            text: string;
+        }[];
+    }>;
+    private getLayoutData;
+    private getScriptData;
+    private saveToGit;
     run(): Promise<void>;
 }

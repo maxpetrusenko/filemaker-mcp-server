@@ -1,12 +1,15 @@
 {
-  "filemaker": {
-    "command": "npx",
-    "args": [
-      "filemaker-mcp-server",
-      "--host", "https://your-server",
-      "--database", "MyDB",
-      "--username", "user",
-      "--password", "pass"
-    ]
+  "mcpServers": {
+    "filemaker": {
+      "command": "npx",
+      "args": ["filemaker-mcp-server"],
+      "env": {
+        "FILEMAKER_HOST": "https://your-filemaker-server.com",
+        "FILEMAKER_DATABASE": "YourDatabase",
+        "FILEMAKER_USERNAME": "your-username",
+        "FILEMAKER_PASSWORD": "your-password",
+        "FILEMAKER_GIT_REPO_PATH": "/path/to/your/filemaker/components/repo"
+      }
+    }
   }
 } 

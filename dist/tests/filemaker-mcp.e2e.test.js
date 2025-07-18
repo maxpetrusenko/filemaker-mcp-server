@@ -1,16 +1,27 @@
 import { FileMakerMCP } from '../src/filemaker-mcp';
 import nock from 'nock';
+import { exec } from 'child_process';
+import * as fs from 'fs/promises';
+// Mock child_process.exec and fs
+jest.mock('child_process');
+jest.mock('fs/promises');
+const mockExec = exec;
+const mockFs = fs;
 describe('FileMakerMCP E2E', () => {
     const config = {
         host: 'https://test-server.com',
         database: 'TestDB',
         username: 'testuser',
         password: 'testpass',
+        gitRepoPath: '/tmp/test-repo',
     };
     let fmMCP;
     beforeEach(() => {
         fmMCP = new FileMakerMCP(config);
         nock.cleanAll();
+        jest.clearAllMocks();
+        // Mock fs.writeFile to succeed
+        mockFs.writeFile.mockResolvedValue(undefined);
     });
     afterEach(() => {
         nock.cleanAll();
@@ -29,8 +40,8 @@ describe('FileMakerMCP E2E', () => {
             messages: [{ code: '0', message: 'OK' }],
         });
         const result = await fmMCP.findRecords({ layout: 'Contacts', query: { Name: 'John' } });
-        expect(result.content[0].text).toContain('foundCount');
         expect(result.content[0].text).toContain('John');
+        expect(result.content[0].text).toContain('recordId');
     });
     it('creates a record', async () => {
         nock(config.host)
@@ -40,7 +51,7 @@ describe('FileMakerMCP E2E', () => {
             .post(`/fmi/data/v1/databases/${config.database}/layouts/Contacts/records`)
             .reply(200, { response: { recordId: '123' }, messages: [{ code: '0', message: 'OK' }] });
         const result = await fmMCP.createRecord({ layout: 'Contacts', fieldData: { Name: 'Jane' } });
-        expect(result.content[0].text).toContain('Record created successfully');
+        expect(result.content[0].text).toContain('Record created with ID');
         expect(result.content[0].text).toContain('123');
     });
     it('updates a record', async () => {
@@ -62,5 +73,86 @@ describe('FileMakerMCP E2E', () => {
             .reply(200, { response: {}, messages: [{ code: '0', message: 'OK' }] });
         const result = await fmMCP.deleteRecord({ layout: 'Contacts', recordId: '123' });
         expect(result.content[0].text).toContain('deleted successfully');
+    });
+    // NEW: Git Integration Tests
+    describe('Git Integration', () => {
+        beforeEach(() => {
+            // Mock successful Git operations
+            mockExec.mockImplementation((command, callback) => {
+                if (command.includes('git add')) {
+                    callback(null, { stdout: '', stderr: '' });
+                }
+                else if (command.includes('git commit')) {
+                    callback(null, { stdout: '[main abc1234] Test commit', stderr: '' });
+                }
+                else if (command.includes('git push')) {
+                    callback(null, { stdout: 'To origin/main', stderr: '' });
+                }
+                else if (command.includes('git pull')) {
+                    callback(null, { stdout: 'Already up to date', stderr: '' });
+                }
+                else if (command.includes('git status')) {
+                    callback(null, { stdout: 'M  Contacts.xml\nA  Script.xml', stderr: '' });
+                }
+                else if (command.includes('git diff')) {
+                    callback(null, { stdout: '@@ -1,1 +1,1 @@\n- old content\n+ new content', stderr: '' });
+                }
+                return {};
+            });
+        });
+        it('exports layout to Git repository', async () => {
+            nock(config.host)
+                .post(`/fmi/data/v1/databases/${config.database}/sessions`)
+                .reply(200, { response: { token: 'mock-token' }, messages: [{ code: '0', message: 'OK' }] });
+            nock(config.host)
+                .get(`/fmi/data/v1/databases/${config.database}/layouts/Contacts`)
+                .reply(200, { response: { layout: 'Contacts', fields: [] }, messages: [{ code: '0', message: 'OK' }] });
+            const result = await fmMCP.gitExportLayout({ layout: 'Contacts', format: 'xml' });
+            expect(result.content[0].text).toContain('Layout Contacts exported');
+            expect(mockFs.writeFile).toHaveBeenCalled();
+        });
+        it('exports script to Git repository', async () => {
+            nock(config.host)
+                .post(`/fmi/data/v1/databases/${config.database}/sessions`)
+                .reply(200, { response: { token: 'mock-token' }, messages: [{ code: '0', message: 'OK' }] });
+            nock(config.host)
+                .get(`/fmi/data/v1/databases/${config.database}/layouts/_script/TestScript`)
+                .reply(200, { response: { script: 'TestScript', steps: [] }, messages: [{ code: '0', message: 'OK' }] });
+            const result = await fmMCP.gitExportScript({ script: 'TestScript', format: 'json' });
+            expect(result.content[0].text).toContain('Script TestScript exported');
+            expect(mockFs.writeFile).toHaveBeenCalled();
+        });
+        it('commits changes to Git repository', async () => {
+            const result = await fmMCP.gitCommitChanges({ message: 'Test commit', includeAll: true });
+            expect(result.content[0].text).toContain('Changes committed');
+            expect(mockExec).toHaveBeenCalledWith('git add .', expect.any(Function));
+            expect(mockExec).toHaveBeenCalledWith('git commit -m "Test commit"', expect.any(Function));
+        });
+        it('pushes changes to remote repository', async () => {
+            const result = await fmMCP.gitPushChanges({ remote: 'origin', branch: 'main' });
+            expect(result.content[0].text).toContain('Changes pushed to origin/main');
+            expect(mockExec).toHaveBeenCalledWith('git push origin main', expect.any(Function));
+        });
+        it('pulls changes from remote repository', async () => {
+            const result = await fmMCP.gitPullChanges({ remote: 'origin', branch: 'main' });
+            expect(result.content[0].text).toContain('Changes pulled from origin/main');
+            expect(mockExec).toHaveBeenCalledWith('git pull origin main', expect.any(Function));
+        });
+        it('shows Git status', async () => {
+            const result = await fmMCP.gitStatus({ showStaged: true, showUnstaged: true });
+            expect(result.content[0].text).toContain('Unstaged:  Contacts.xml');
+            expect(result.content[0].text).toContain('Staged:  Script.xml');
+            expect(mockExec).toHaveBeenCalledWith('git status --short', expect.any(Function));
+        });
+        it('shows Git diff', async () => {
+            const result = await fmMCP.gitDiff({ file: 'Contacts.xml', staged: false });
+            expect(result.content[0].text).toContain('@@ -1,1 +1,1 @@');
+            expect(mockExec).toHaveBeenCalledWith('git diff Contacts.xml', expect.any(Function));
+        });
+        it('shows staged Git diff', async () => {
+            const result = await fmMCP.gitDiff({ staged: true });
+            expect(result.content[0].text).toContain('@@ -1,1 +1,1 @@');
+            expect(mockExec).toHaveBeenCalledWith('git diff --cached', expect.any(Function));
+        });
     });
 });

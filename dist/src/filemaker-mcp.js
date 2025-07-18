@@ -2,6 +2,11 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { CallToolRequestSchema, ListToolsRequestSchema, } from '@modelcontextprotocol/sdk/types.js';
 import axios from 'axios';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+const execAsync = promisify(exec);
 export class FileMakerMCP {
     server;
     client;
@@ -11,7 +16,7 @@ export class FileMakerMCP {
         this.config = config;
         this.server = new Server({
             name: 'filemaker-mcp',
-            version: '1.0.0',
+            version: '2.0.0', // Updated version for v2
         }, {
             capabilities: {
                 tools: {},
@@ -48,6 +53,7 @@ export class FileMakerMCP {
         this.server.setRequestHandler(ListToolsRequestSchema, async () => {
             return {
                 tools: [
+                    // Existing FileMaker CRUD tools
                     {
                         name: 'fm_find_records',
                         description: 'Find records in a FileMaker layout',
@@ -142,6 +148,146 @@ export class FileMakerMCP {
                             required: ['layout'],
                         },
                     },
+                    // NEW: Git-based Version Control Tools
+                    {
+                        name: 'fm_git_export_layout',
+                        description: 'Export a FileMaker layout to XML/JSON and save to Git repository',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                layout: { type: 'string', description: 'Layout name to export' },
+                                format: {
+                                    type: 'string',
+                                    description: 'Export format: xml or json',
+                                    enum: ['xml', 'json'],
+                                    default: 'xml'
+                                },
+                                gitMessage: {
+                                    type: 'string',
+                                    description: 'Git commit message for this export',
+                                    default: 'Export FileMaker layout'
+                                }
+                            },
+                            required: ['layout'],
+                        },
+                    },
+                    {
+                        name: 'fm_git_export_script',
+                        description: 'Export a FileMaker script to XML/JSON and save to Git repository',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                script: { type: 'string', description: 'Script name to export' },
+                                format: {
+                                    type: 'string',
+                                    description: 'Export format: xml or json',
+                                    enum: ['xml', 'json'],
+                                    default: 'xml'
+                                },
+                                gitMessage: {
+                                    type: 'string',
+                                    description: 'Git commit message for this export',
+                                    default: 'Export FileMaker script'
+                                }
+                            },
+                            required: ['script'],
+                        },
+                    },
+                    {
+                        name: 'fm_git_commit_changes',
+                        description: 'Commit all changes in the Git repository',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                message: {
+                                    type: 'string',
+                                    description: 'Commit message',
+                                    default: 'Update FileMaker components'
+                                },
+                                includeAll: {
+                                    type: 'boolean',
+                                    description: 'Include all changes (git add .)',
+                                    default: true
+                                }
+                            },
+                            required: ['message'],
+                        },
+                    },
+                    {
+                        name: 'fm_git_push_changes',
+                        description: 'Push committed changes to remote Git repository',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                remote: {
+                                    type: 'string',
+                                    description: 'Remote name (e.g., origin)',
+                                    default: 'origin'
+                                },
+                                branch: {
+                                    type: 'string',
+                                    description: 'Branch name to push to',
+                                    default: 'main'
+                                }
+                            },
+                        },
+                    },
+                    {
+                        name: 'fm_git_pull_changes',
+                        description: 'Pull latest changes from remote Git repository',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                remote: {
+                                    type: 'string',
+                                    description: 'Remote name (e.g., origin)',
+                                    default: 'origin'
+                                },
+                                branch: {
+                                    type: 'string',
+                                    description: 'Branch name to pull from',
+                                    default: 'main'
+                                }
+                            },
+                        },
+                    },
+                    {
+                        name: 'fm_git_status',
+                        description: 'Get Git repository status and show changes',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                showStaged: {
+                                    type: 'boolean',
+                                    description: 'Show staged changes',
+                                    default: true
+                                },
+                                showUnstaged: {
+                                    type: 'boolean',
+                                    description: 'Show unstaged changes',
+                                    default: true
+                                }
+                            },
+                        },
+                    },
+                    {
+                        name: 'fm_git_diff',
+                        description: 'Show differences between working directory and last commit',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                file: {
+                                    type: 'string',
+                                    description: 'Specific file to show diff for (optional)'
+                                },
+                                staged: {
+                                    type: 'boolean',
+                                    description: 'Show staged changes diff',
+                                    default: false
+                                }
+                            },
+                        },
+                    },
                 ],
             };
         });
@@ -152,6 +298,7 @@ export class FileMakerMCP {
                     await this.authenticate();
                 }
                 switch (name) {
+                    // Existing FileMaker CRUD operations
                     case 'fm_find_records':
                         return await this.findRecords(args);
                     case 'fm_create_record':
@@ -164,6 +311,21 @@ export class FileMakerMCP {
                         return await this.executeScript(args);
                     case 'fm_get_layout_metadata':
                         return await this.getLayoutMetadata(args);
+                    // NEW: Git-based Version Control operations
+                    case 'fm_git_export_layout':
+                        return await this.gitExportLayout(args);
+                    case 'fm_git_export_script':
+                        return await this.gitExportScript(args);
+                    case 'fm_git_commit_changes':
+                        return await this.gitCommitChanges(args);
+                    case 'fm_git_push_changes':
+                        return await this.gitPushChanges(args);
+                    case 'fm_git_pull_changes':
+                        return await this.gitPullChanges(args);
+                    case 'fm_git_status':
+                        return await this.gitStatus(args);
+                    case 'fm_git_diff':
+                        return await this.gitDiff(args);
                     default:
                         throw new Error(`Unknown tool: ${name}`);
                 }
@@ -185,6 +347,20 @@ export class FileMakerMCP {
                             return await this.executeScript(args);
                         case 'fm_get_layout_metadata':
                             return await this.getLayoutMetadata(args);
+                        case 'fm_git_export_layout':
+                            return await this.gitExportLayout(args);
+                        case 'fm_git_export_script':
+                            return await this.gitExportScript(args);
+                        case 'fm_git_commit_changes':
+                            return await this.gitCommitChanges(args);
+                        case 'fm_git_push_changes':
+                            return await this.gitPushChanges(args);
+                        case 'fm_git_pull_changes':
+                            return await this.gitPullChanges(args);
+                        case 'fm_git_status':
+                            return await this.gitStatus(args);
+                        case 'fm_git_diff':
+                            return await this.gitDiff(args);
                         default:
                             throw new Error(`Unknown tool: ${name}`);
                     }
@@ -205,30 +381,30 @@ export class FileMakerMCP {
             content: [
                 {
                     type: 'text',
-                    text: JSON.stringify({
-                        foundCount: response.data.response.dataInfo.foundCount,
-                        returnedCount: response.data.response.dataInfo.returnedCount,
-                        records: response.data.response.data,
-                    }, null, 2),
+                    text: JSON.stringify(response.data.response.data, null, 2),
                 },
             ],
         };
     }
     async createRecord(args) {
         const { layout, fieldData } = args;
-        const response = await this.client.post(`/layouts/${layout}/records`, { fieldData });
+        const response = await this.client.post(`/layouts/${layout}/records`, {
+            fieldData,
+        });
         return {
             content: [
                 {
                     type: 'text',
-                    text: `Record created successfully. Record ID: ${response.data.response.recordId}`,
+                    text: `Record created with ID: ${response.data.response.recordId}`,
                 },
             ],
         };
     }
     async updateRecord(args) {
         const { layout, recordId, fieldData } = args;
-        await this.client.patch(`/layouts/${layout}/records/${recordId}`, { fieldData });
+        await this.client.patch(`/layouts/${layout}/records/${recordId}`, {
+            fieldData,
+        });
         return {
             content: [
                 {
@@ -252,16 +428,16 @@ export class FileMakerMCP {
     }
     async executeScript(args) {
         const { script, parameter } = args;
-        const response = await this.client.patch(`/layouts/_script/${script}`, {
-            script: {
-                parameter: parameter || '',
-            },
-        });
+        const scriptRequest = { script };
+        if (parameter) {
+            scriptRequest.scriptParam = parameter;
+        }
+        const response = await this.client.post('/scripts', scriptRequest);
         return {
             content: [
                 {
                     type: 'text',
-                    text: `Script executed. Result: ${response.data.response.scriptResult || 'No result'}`,
+                    text: `Script ${script} executed successfully. Result: ${JSON.stringify(response.data.response)}`,
                 },
             ],
         };
@@ -277,6 +453,137 @@ export class FileMakerMCP {
                 },
             ],
         };
+    }
+    async gitExportLayout(args) {
+        const { layout, format = 'xml', gitMessage = 'Export FileMaker layout' } = args;
+        const layoutData = await this.getLayoutData(layout);
+        const filePath = await this.saveToGit(layoutData, `${layout}.${format}`);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Layout ${layout} exported to ${filePath} and committed.`,
+                },
+            ],
+        };
+    }
+    async gitExportScript(args) {
+        const { script, format = 'xml', gitMessage = 'Export FileMaker script' } = args;
+        const scriptData = await this.getScriptData(script);
+        const filePath = await this.saveToGit(scriptData, `${script}.${format}`);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Script ${script} exported to ${filePath} and committed.`,
+                },
+            ],
+        };
+    }
+    async gitCommitChanges(args) {
+        const { message, includeAll = true } = args;
+        const gitAddCommand = includeAll ? 'git add .' : '';
+        const gitCommitCommand = `git commit -m "${message}"`;
+        if (gitAddCommand) {
+            await execAsync(gitAddCommand);
+        }
+        await execAsync(gitCommitCommand);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Changes committed to Git repository.`,
+                },
+            ],
+        };
+    }
+    async gitPushChanges(args) {
+        const { remote = 'origin', branch = 'main' } = args;
+        const gitPushCommand = `git push ${remote} ${branch}`;
+        await execAsync(gitPushCommand);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Changes pushed to ${remote}/${branch}.`,
+                },
+            ],
+        };
+    }
+    async gitPullChanges(args) {
+        const { remote = 'origin', branch = 'main' } = args;
+        const gitPullCommand = `git pull ${remote} ${branch}`;
+        await execAsync(gitPullCommand);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Changes pulled from ${remote}/${branch}.`,
+                },
+            ],
+        };
+    }
+    async gitStatus(args) {
+        const { showStaged = true, showUnstaged = true } = args;
+        const gitStatusCommand = `git status --short`;
+        const { stdout, stderr } = await execAsync(gitStatusCommand);
+        if (stderr) {
+            throw new Error(`Error getting Git status: ${stderr}`);
+        }
+        const statusOutput = stdout.trim();
+        const lines = statusOutput.split('\n');
+        const changes = [];
+        for (const line of lines) {
+            if (showStaged && line.startsWith('A ')) {
+                changes.push(`Staged: ${line.substring(2)}`);
+            }
+            else if (showUnstaged && line.startsWith('M ')) {
+                changes.push(`Unstaged: ${line.substring(2)}`);
+            }
+            else if (showUnstaged && line.startsWith('D ')) {
+                changes.push(`Deleted: ${line.substring(2)}`);
+            }
+        }
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: changes.join('\n'),
+                },
+            ],
+        };
+    }
+    async gitDiff(args) {
+        const { file, staged = false } = args;
+        let gitDiffCommand = staged ? 'git diff --cached' : 'git diff';
+        if (file) {
+            gitDiffCommand += ` ${file}`;
+        }
+        const { stdout, stderr } = await execAsync(gitDiffCommand);
+        if (stderr) {
+            throw new Error(`Error getting Git diff: ${stderr}`);
+        }
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: stdout,
+                },
+            ],
+        };
+    }
+    async getLayoutData(layoutName) {
+        const response = await this.client.get(`/layouts/${layoutName}`);
+        return response.data.response;
+    }
+    async getScriptData(scriptName) {
+        const response = await this.client.get(`/layouts/_script/${scriptName}`);
+        return response.data.response;
+    }
+    async saveToGit(data, fileName) {
+        const filePath = path.join(this.config.gitRepoPath || '.', fileName);
+        await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+        return filePath;
     }
     async run() {
         const transport = new StdioServerTransport();

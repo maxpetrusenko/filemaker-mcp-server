@@ -10,6 +10,7 @@ function parseArgs(): Partial<FileMakerConfig> {
     if (args[i] === '--database') config.database = args[++i];
     if (args[i] === '--username') config.username = args[++i];
     if (args[i] === '--password') config.password = args[++i];
+    if (args[i] === '--git-repo-path') config.gitRepoPath = args[++i];
   }
   return config;
 }
@@ -19,6 +20,7 @@ const envConfig: Partial<FileMakerConfig> = {
   database: process.env.FILEMAKER_DATABASE,
   username: process.env.FILEMAKER_USERNAME,
   password: process.env.FILEMAKER_PASSWORD,
+  gitRepoPath: process.env.FILEMAKER_GIT_REPO_PATH,
 };
 
 const argConfig = parseArgs();
@@ -27,11 +29,13 @@ const config: FileMakerConfig = {
   database: argConfig.database || envConfig.database || '',
   username: argConfig.username || envConfig.username || '',
   password: argConfig.password || envConfig.password || '',
+  gitRepoPath: argConfig.gitRepoPath || envConfig.gitRepoPath,
 };
 
 if (!config.host || !config.database || !config.username || !config.password) {
   console.error('Missing required config. Provide via env or CLI args:');
   console.error('--host, --database, --username, --password');
+  console.error('Optional: --git-repo-path for Git integration');
   process.exit(1);
 }
 
