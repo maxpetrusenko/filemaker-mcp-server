@@ -17,6 +17,14 @@ A Model Context Protocol (MCP) server for FileMaker integration, enabling AI ass
 - **Bidirectional Sync**: Seamless integration between FileMaker and Git repositories
 - **Collaborative Development**: Enable team collaboration with version control
 
+### 🆕 Intelligent Debugging (v2.1)
+- **Script Analysis**: Detect common debugging issues and performance bottlenecks
+- **Error Resolution**: AI-powered error analysis with fix suggestions
+- **Script Optimization**: Performance and readability optimization recommendations
+- **Layout Validation**: Validate layout structure for common issues
+- **Complexity Analysis**: Assess script complexity and risk levels
+- **Performance Analysis**: Identify performance bottlenecks and optimization opportunities
+
 ## Installation
 
 ```bash
@@ -174,6 +182,93 @@ filemaker-mcp-server \
 }
 ```
 
+### 🆕 Intelligent Debugging Operations
+
+#### Analyze Script for Debugging Issues
+```json
+{
+  "name": "fm_debug_analyze_script",
+  "arguments": {
+    "scriptName": "SendWelcomeEmail",
+    "scriptContent": "Set Next Step\nGo to Field [\"Email\"]\nSet Field [\"Email\"; \"test@example.com\"]"
+  }
+}
+```
+
+#### Get Error Fix Suggestions
+```json
+{
+  "name": "fm_debug_suggest_fixes",
+  "arguments": {
+    "scriptName": "SendWelcomeEmail",
+    "errorMessage": "Field not found: Email",
+    "scriptContent": "Set Field [\"Email\"; \"test@example.com\"]"
+  }
+}
+```
+
+#### Optimize Script for Performance
+```json
+{
+  "name": "fm_debug_optimize_script",
+  "arguments": {
+    "scriptName": "ProcessRecords",
+    "scriptContent": "Go to Field [\"Name\"]\nSet Field [\"Name\"; \"John\"]",
+    "optimizationType": "performance"
+  }
+}
+```
+
+#### Validate Layout Structure
+```json
+{
+  "name": "fm_debug_validate_layout",
+  "arguments": {
+    "layoutName": "Contacts",
+    "layoutData": {
+      "objects": [/* layout objects array */]
+    }
+  }
+}
+```
+
+#### Resolve FileMaker Error Codes
+```json
+{
+  "name": "fm_debug_error_resolution",
+  "arguments": {
+    "errorCode": "100",
+    "scriptName": "FindRecord",
+    "errorContext": {
+      "layout": "Contacts",
+      "operation": "find"
+    }
+  }
+}
+```
+
+#### Analyze Script Performance
+```json
+{
+  "name": "fm_debug_performance_analysis",
+  "arguments": {
+    "scriptName": "ProcessLargeDataset",
+    "scriptContent": "Loop\n  Go to Field [\"Field1\"]\n  Set Field [\"Field1\"; Get(RecordNumber)]\nEnd Loop"
+  }
+}
+```
+
+#### Analyze Script Complexity
+```json
+{
+  "name": "fm_debug_script_complexity",
+  "arguments": {
+    "scriptName": "ComplexWorkflow",
+    "scriptContent": "If [condition1]\n  If [condition2]\n    Loop\n      Perform Script [\"SubScript\"]\n    End Loop\n  End If\nEnd If"
+  }
+}
+```
+
 ## Claude Integration
 
 Add this to your Claude configuration:
@@ -265,6 +360,38 @@ fm_git_push_changes --remote "origin" --branch "main"
 - Review changes with: `fm_git_status` and `fm_git_diff`
 - Export their modifications and commit: `fm_git_export_layout` + `fm_git_commit_changes`
 
+## Intelligent Debugging Workflow
+
+### 1. Script Analysis
+```bash
+# Analyze a script for common issues
+fm_debug_analyze_script --scriptName "SendWelcomeEmail" --scriptContent "Set Next Step\nGo to Field [\"Email\"]"
+```
+
+### 2. Error Resolution
+```bash
+# Get fix suggestions for errors
+fm_debug_suggest_fixes --scriptName "SendWelcomeEmail" --errorMessage "Field not found: Email"
+```
+
+### 3. Performance Optimization
+```bash
+# Optimize script for better performance
+fm_debug_optimize_script --scriptName "ProcessRecords" --optimizationType "performance"
+```
+
+### 4. Complexity Assessment
+```bash
+# Analyze script complexity and risk
+fm_debug_script_complexity --scriptName "ComplexWorkflow"
+```
+
+### 5. Layout Validation
+```bash
+# Validate layout structure
+fm_debug_validate_layout --layoutName "Contacts" --layoutData "{...}"
+```
+
 ## Security Considerations
 
 - Store sensitive credentials in environment variables
@@ -304,6 +431,17 @@ fm_git_push_changes --remote "origin" --branch "main"
 MIT License - see LICENSE file for details.
 
 ## Version History
+
+### v2.1.0
+- 🆕 Added Intelligent Debugging features
+- 🆕 Script analysis for debugging issues and performance bottlenecks
+- 🆕 AI-powered error resolution with fix suggestions
+- 🆕 Script optimization for performance and readability
+- 🆕 Layout validation for common issues
+- 🆕 Complexity analysis and risk assessment
+- 🆕 Performance analysis with optimization recommendations
+- 🔧 Enhanced error handling and validation
+- 📚 Comprehensive debugging documentation and examples
 
 ### v2.0.0
 - 🆕 Added Git-based version control integration

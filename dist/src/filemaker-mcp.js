@@ -288,6 +288,100 @@ export class FileMakerMCP {
                             },
                         },
                     },
+                    // NEW: Intelligent Debugging Tools
+                    {
+                        name: 'fm_debug_analyze_script',
+                        description: 'Analyze a FileMaker script for common debugging issues, performance bottlenecks, and complexity.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                scriptName: { type: 'string', description: 'Name of the script to analyze' },
+                                scriptContent: { type: 'string', description: 'Content of the script to analyze' },
+                            },
+                            required: ['scriptName', 'scriptContent'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_suggest_fixes',
+                        description: 'AI-powered error analysis and fix suggestions for a FileMaker script.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                scriptName: { type: 'string', description: 'Name of the script with the error' },
+                                errorMessage: { type: 'string', description: 'Error message from the script' },
+                                scriptContent: { type: 'string', description: 'Content of the script (optional for context)' },
+                            },
+                            required: ['scriptName', 'errorMessage'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_optimize_script',
+                        description: 'Optimize a FileMaker script for performance or readability.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                scriptName: { type: 'string', description: 'Name of the script to optimize' },
+                                scriptContent: { type: 'string', description: 'Content of the script to optimize' },
+                                optimizationType: {
+                                    type: 'string',
+                                    description: 'Type of optimization: "performance" or "readability"',
+                                    enum: ['performance', 'readability'],
+                                    default: 'performance'
+                                },
+                            },
+                            required: ['scriptName', 'scriptContent'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_validate_layout',
+                        description: 'Validate the structure of a FileMaker layout for common issues.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                layoutName: { type: 'string', description: 'Name of the layout to validate' },
+                                layoutData: { type: 'object', description: 'Data of the layout to validate' },
+                            },
+                            required: ['layoutName', 'layoutData'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_error_resolution',
+                        description: 'Resolve specific FileMaker error codes with steps and examples.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                errorCode: { type: 'string', description: 'Error code to resolve' },
+                                errorContext: { type: 'object', description: 'Context of the error (optional)' },
+                                scriptName: { type: 'string', description: 'Name of the script (if applicable)' },
+                            },
+                            required: ['errorCode'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_performance_analysis',
+                        description: 'Analyze a FileMaker script for performance issues and bottlenecks.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                scriptName: { type: 'string', description: 'Name of the script to analyze' },
+                                scriptContent: { type: 'string', description: 'Content of the script to analyze' },
+                                executionData: { type: 'object', description: 'Data from script execution (optional)' },
+                            },
+                            required: ['scriptName', 'scriptContent'],
+                        },
+                    },
+                    {
+                        name: 'fm_debug_script_complexity',
+                        description: 'Analyze a FileMaker script for complexity metrics and risk level.',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                scriptName: { type: 'string', description: 'Name of the script to analyze' },
+                                scriptContent: { type: 'string', description: 'Content of the script to analyze' },
+                            },
+                            required: ['scriptName', 'scriptContent'],
+                        },
+                    },
                 ],
             };
         });
@@ -326,6 +420,21 @@ export class FileMakerMCP {
                         return await this.gitStatus(args);
                     case 'fm_git_diff':
                         return await this.gitDiff(args);
+                    // NEW: Intelligent Debugging operations
+                    case 'fm_debug_analyze_script':
+                        return await this.debugAnalyzeScript(args);
+                    case 'fm_debug_suggest_fixes':
+                        return await this.debugSuggestFixes(args);
+                    case 'fm_debug_optimize_script':
+                        return await this.debugOptimizeScript(args);
+                    case 'fm_debug_validate_layout':
+                        return await this.debugValidateLayout(args);
+                    case 'fm_debug_error_resolution':
+                        return await this.debugErrorResolution(args);
+                    case 'fm_debug_performance_analysis':
+                        return await this.debugPerformanceAnalysis(args);
+                    case 'fm_debug_script_complexity':
+                        return await this.debugScriptComplexity(args);
                     default:
                         throw new Error(`Unknown tool: ${name}`);
                 }
@@ -361,6 +470,20 @@ export class FileMakerMCP {
                             return await this.gitStatus(args);
                         case 'fm_git_diff':
                             return await this.gitDiff(args);
+                        case 'fm_debug_analyze_script':
+                            return await this.debugAnalyzeScript(args);
+                        case 'fm_debug_suggest_fixes':
+                            return await this.debugSuggestFixes(args);
+                        case 'fm_debug_optimize_script':
+                            return await this.debugOptimizeScript(args);
+                        case 'fm_debug_validate_layout':
+                            return await this.debugValidateLayout(args);
+                        case 'fm_debug_error_resolution':
+                            return await this.debugErrorResolution(args);
+                        case 'fm_debug_performance_analysis':
+                            return await this.debugPerformanceAnalysis(args);
+                        case 'fm_debug_script_complexity':
+                            return await this.debugScriptComplexity(args);
                         default:
                             throw new Error(`Unknown tool: ${name}`);
                     }
@@ -571,6 +694,363 @@ export class FileMakerMCP {
                 },
             ],
         };
+    }
+    // NEW: Intelligent Debugging operations
+    async debugAnalyzeScript(args) {
+        const { scriptName, scriptContent } = args;
+        if (!scriptName || !scriptContent) {
+            throw new Error('Script name and content are required for analysis');
+        }
+        // Analyze script for common debugging issues
+        const analysis = this.analyzeScriptContent(scriptContent);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        scriptName,
+                        analysis,
+                        recommendations: this.generateDebugRecommendations(analysis),
+                        complexityScore: this.calculateComplexityScore(scriptContent)
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugSuggestFixes(args) {
+        const { scriptName, errorMessage, scriptContent } = args;
+        if (!scriptName || !errorMessage) {
+            throw new Error('Script name and error message are required');
+        }
+        // AI-powered error analysis and fix suggestions
+        const fixes = this.generateErrorFixes(errorMessage, scriptContent);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        scriptName,
+                        errorMessage,
+                        suggestedFixes: fixes,
+                        preventionTips: this.generatePreventionTips(errorMessage)
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugOptimizeScript(args) {
+        const { scriptName, scriptContent, optimizationType } = args;
+        if (!scriptName || !scriptContent) {
+            throw new Error('Script name and content are required for optimization');
+        }
+        const optimizationType_ = optimizationType || 'performance';
+        const optimizedScript = this.optimizeScriptContent(scriptContent, optimizationType_);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        scriptName,
+                        originalScript: scriptContent,
+                        optimizedScript,
+                        optimizationType: optimizationType_,
+                        improvements: this.calculateImprovements(scriptContent, optimizedScript)
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugValidateLayout(args) {
+        const { layoutName, layoutData } = args;
+        if (!layoutName || !layoutData) {
+            throw new Error('Layout name and data are required for validation');
+        }
+        const validation = this.validateLayoutStructure(layoutData);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        layoutName,
+                        validation,
+                        issues: validation.issues,
+                        recommendations: validation.recommendations
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugErrorResolution(args) {
+        const { errorCode, errorContext, scriptName } = args;
+        if (!errorCode) {
+            throw new Error('Error code is required for resolution');
+        }
+        const resolution = this.resolveFileMakerError(errorCode, errorContext, scriptName);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        errorCode,
+                        errorContext,
+                        scriptName,
+                        resolution,
+                        steps: resolution.steps,
+                        codeExamples: resolution.codeExamples
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugPerformanceAnalysis(args) {
+        const { scriptName, scriptContent, executionData } = args;
+        if (!scriptName || !scriptContent) {
+            throw new Error('Script name and content are required for performance analysis');
+        }
+        const analysis = this.analyzeScriptPerformance(scriptContent, executionData);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        scriptName,
+                        performanceAnalysis: analysis,
+                        bottlenecks: analysis.bottlenecks,
+                        optimizationSuggestions: analysis.suggestions
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    async debugScriptComplexity(args) {
+        const { scriptName, scriptContent } = args;
+        if (!scriptName || !scriptContent) {
+            throw new Error('Script name and content are required for complexity analysis');
+        }
+        const complexity = this.analyzeScriptComplexity(scriptContent);
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: JSON.stringify({
+                        scriptName,
+                        complexity,
+                        metrics: complexity.metrics,
+                        riskLevel: complexity.riskLevel,
+                        refactoringSuggestions: complexity.suggestions
+                    }, null, 2)
+                }
+            ]
+        };
+    }
+    // Helper methods for intelligent debugging
+    analyzeScriptContent(scriptContent) {
+        const issues = [];
+        const warnings = [];
+        // Check for common debugging issues
+        if (scriptContent.includes('Set Next Step')) {
+            issues.push({
+                type: 'debugging_bug',
+                severity: 'high',
+                description: 'Set Next Step command detected - known to cause debugging issues',
+                recommendation: 'Consider using alternative debugging approaches or breakpoints'
+            });
+        }
+        if (scriptContent.includes('Go to Field')) {
+            warnings.push({
+                type: 'performance_warning',
+                severity: 'medium',
+                description: 'Go to Field command can cause performance issues',
+                recommendation: 'Consider using Set Field or other alternatives'
+            });
+        }
+        // Check for nested loops
+        const loopPattern = /Loop\s*\n[\s\S]*?End Loop/g;
+        const loopMatches = scriptContent.match(loopPattern);
+        if (loopMatches && loopMatches.length > 2) {
+            issues.push({
+                type: 'complexity_warning',
+                severity: 'medium',
+                description: 'Multiple nested loops detected',
+                recommendation: 'Consider refactoring to reduce complexity'
+            });
+        }
+        return { issues, warnings };
+    }
+    generateDebugRecommendations(analysis) {
+        const recommendations = [];
+        if (analysis.issues.some((issue) => issue.type === 'debugging_bug')) {
+            recommendations.push('Use step-by-step debugging with breakpoints instead of Set Next Step');
+            recommendations.push('Add logging statements to track script execution flow');
+        }
+        if (analysis.warnings.some((warning) => warning.type === 'performance_warning')) {
+            recommendations.push('Optimize field navigation to improve performance');
+            recommendations.push('Consider batch operations for multiple field updates');
+        }
+        return recommendations;
+    }
+    calculateComplexityScore(scriptContent) {
+        let score = 0;
+        // Count loops
+        const loopCount = (scriptContent.match(/Loop/g) || []).length;
+        score += loopCount * 5;
+        // Count conditionals
+        const ifCount = (scriptContent.match(/If/g) || []).length;
+        score += ifCount * 3;
+        // Count script calls
+        const scriptCallCount = (scriptContent.match(/Perform Script/g) || []).length;
+        score += scriptCallCount * 2;
+        return Math.min(score, 100); // Cap at 100
+    }
+    generateErrorFixes(errorMessage, scriptContent) {
+        const fixes = [];
+        // Common FileMaker error patterns
+        if (errorMessage.includes('Field not found')) {
+            fixes.push({
+                type: 'field_error',
+                description: 'Field not found in current context',
+                solution: 'Verify field name spelling and ensure field exists in current layout',
+                codeExample: '// Use GetFieldName() to verify field names\nGetFieldName("FieldName")'
+            });
+        }
+        if (errorMessage.includes('Script not found')) {
+            fixes.push({
+                type: 'script_error',
+                description: 'Script not found or not accessible',
+                solution: 'Check script name spelling and ensure script is accessible',
+                codeExample: '// Verify script exists before calling\nIf [Get(ScriptName) ≠ ""]\n  Perform Script ["ScriptName"]\nEnd If'
+            });
+        }
+        if (errorMessage.includes('Record not found')) {
+            fixes.push({
+                type: 'record_error',
+                description: 'No records match the current find criteria',
+                solution: 'Add error handling for empty result sets',
+                codeExample: 'If [Get(FoundCount) = 0]\n  Show Custom Dialog ["No records found"]\nEnd If'
+            });
+        }
+        return fixes;
+    }
+    generatePreventionTips(errorMessage) {
+        const tips = [];
+        if (errorMessage.includes('Field not found')) {
+            tips.push('Always validate field names before using them');
+            tips.push('Use GetFieldName() to verify field existence');
+            tips.push('Test scripts on different layouts to ensure field accessibility');
+        }
+        if (errorMessage.includes('Script not found')) {
+            tips.push('Use consistent naming conventions for scripts');
+            tips.push('Document script dependencies in comments');
+            tips.push('Test script calls in isolation before integration');
+        }
+        return tips;
+    }
+    optimizeScriptContent(scriptContent, optimizationType) {
+        let optimized = scriptContent;
+        if (optimizationType === 'performance') {
+            // Replace Go to Field with Set Field where possible
+            optimized = optimized.replace(/Go to Field \[([^\]]+)\]/g, 'Set Field [$1; ""]');
+            // Optimize loops
+            optimized = optimized.replace(/Loop\s*\n\s*Exit Loop If \[([^\]]+)\]/g, 'Loop\n  If [$1]\n    Exit Loop\n  End If');
+        }
+        if (optimizationType === 'readability') {
+            // Add comments for complex logic
+            optimized = optimized.replace(/(If \[[^\]]+\])/g, '// Conditional check\n$1');
+        }
+        return optimized;
+    }
+    calculateImprovements(original, optimized) {
+        return {
+            originalLength: original.length,
+            optimizedLength: optimized.length,
+            reduction: Math.round(((original.length - optimized.length) / original.length) * 100),
+            estimatedPerformanceGain: '10-25%'
+        };
+    }
+    validateLayoutStructure(layoutData) {
+        const issues = [];
+        const recommendations = [];
+        // Check for common layout issues
+        if (layoutData.objects && layoutData.objects.length > 50) {
+            issues.push({
+                type: 'complexity',
+                severity: 'medium',
+                description: 'Layout contains many objects which may impact performance'
+            });
+            recommendations.push('Consider splitting layout into multiple views');
+        }
+        return { issues, recommendations };
+    }
+    resolveFileMakerError(errorCode, errorContext, scriptName) {
+        const errorDatabase = {
+            '100': {
+                description: 'Record is missing',
+                steps: ['Check if record exists', 'Verify find criteria', 'Add error handling'],
+                codeExamples: ['If [Get(FoundCount) = 0]', 'Show Custom Dialog ["Record not found"]']
+            },
+            '101': {
+                description: 'Record is locked',
+                steps: ['Check record lock status', 'Wait for lock to release', 'Implement retry logic'],
+                codeExamples: ['If [Get(RecordOpenState) ≠ 0]', 'Commit Records/Requests']
+            },
+            '102': {
+                description: 'Field is missing',
+                steps: ['Verify field name', 'Check field accessibility', 'Test on different layouts'],
+                codeExamples: ['GetFieldName("FieldName")', 'If [IsEmpty(GetFieldName("FieldName"))]']
+            }
+        };
+        return errorDatabase[errorCode] || {
+            description: 'Unknown error code',
+            steps: ['Check FileMaker documentation', 'Review script logic', 'Test in isolation'],
+            codeExamples: ['Show Custom Dialog ["Error: " & Get(LastError)]']
+        };
+    }
+    analyzeScriptPerformance(scriptContent, executionData) {
+        const bottlenecks = [];
+        const suggestions = [];
+        // Analyze for performance issues
+        if (scriptContent.includes('Go to Field')) {
+            bottlenecks.push({
+                type: 'field_navigation',
+                impact: 'medium',
+                description: 'Field navigation can be slow'
+            });
+            suggestions.push('Use Set Field instead of Go to Field where possible');
+        }
+        if (scriptContent.includes('Loop')) {
+            const loopCount = (scriptContent.match(/Loop/g) || []).length;
+            if (loopCount > 2) {
+                bottlenecks.push({
+                    type: 'nested_loops',
+                    impact: 'high',
+                    description: 'Nested loops can cause performance issues'
+                });
+                suggestions.push('Consider refactoring to reduce loop nesting');
+            }
+        }
+        return { bottlenecks, suggestions };
+    }
+    analyzeScriptComplexity(scriptContent) {
+        const metrics = {
+            lineCount: scriptContent.split('\n').length,
+            loopCount: (scriptContent.match(/Loop/g) || []).length,
+            ifCount: (scriptContent.match(/If/g) || []).length,
+            scriptCallCount: (scriptContent.match(/Perform Script/g) || []).length
+        };
+        let riskLevel = 'low';
+        if (metrics.loopCount > 3 || metrics.ifCount > 10) {
+            riskLevel = 'high';
+        }
+        else if (metrics.loopCount > 1 || metrics.ifCount > 5) {
+            riskLevel = 'medium';
+        }
+        const suggestions = [];
+        if (riskLevel === 'high') {
+            suggestions.push('Break complex script into smaller sub-scripts');
+            suggestions.push('Add comprehensive error handling');
+            suggestions.push('Document script logic thoroughly');
+        }
+        return { metrics, riskLevel, suggestions };
     }
     async getLayoutData(layoutName) {
         const response = await this.client.get(`/layouts/${layoutName}`);

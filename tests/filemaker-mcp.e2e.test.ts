@@ -171,4 +171,84 @@ describe('FileMakerMCP E2E', () => {
       expect(mockExec).toHaveBeenCalledWith('git diff --cached', expect.any(Function));
     });
   });
+
+  describe('Intelligent Debugging', () => {
+    it('analyzes script for debugging issues', async () => {
+      const result = await fmMCP.debugAnalyzeScript({
+        scriptName: 'TestScript',
+        scriptContent: 'Set Next Step\nGo to Field ["TestField"]\nLoop\n  If [Get(FoundCount) > 0]\n    Exit Loop\n  End If\nEnd Loop'
+      });
+
+      expect(result.content[0].text).toContain('TestScript');
+      expect(result.content[0].text).toContain('debugging_bug');
+      expect(result.content[0].text).toContain('performance_warning');
+    });
+
+    it('suggests fixes for script errors', async () => {
+      const result = await fmMCP.debugSuggestFixes({
+        scriptName: 'TestScript',
+        errorMessage: 'Field not found: TestField'
+      });
+
+      expect(result.content[0].text).toContain('TestScript');
+      expect(result.content[0].text).toContain('Field not found');
+      expect(result.content[0].text).toContain('field_error');
+    });
+
+    it('optimizes script for performance', async () => {
+      const result = await fmMCP.debugOptimizeScript({
+        scriptName: 'TestScript',
+        scriptContent: 'Go to Field ["TestField"]\nSet Field ["TestField"; "Value"]',
+        optimizationType: 'performance'
+      });
+
+      expect(result.content[0].text).toContain('TestScript');
+      expect(result.content[0].text).toContain('optimizedScript');
+      expect(result.content[0].text).toContain('performance');
+    });
+
+    it('validates layout structure', async () => {
+      const result = await fmMCP.debugValidateLayout({
+        layoutName: 'TestLayout',
+        layoutData: { objects: Array(60).fill({}) } // 60 objects to trigger complexity warning
+      });
+
+      expect(result.content[0].text).toContain('TestLayout');
+      expect(result.content[0].text).toContain('complexity');
+    });
+
+    it('resolves FileMaker error codes', async () => {
+      const result = await fmMCP.debugErrorResolution({
+        errorCode: '100',
+        scriptName: 'TestScript'
+      });
+
+      expect(result.content[0].text).toContain('100');
+      expect(result.content[0].text).toContain('Record is missing');
+      expect(result.content[0].text).toContain('steps');
+    });
+
+    it('analyzes script performance', async () => {
+      const result = await fmMCP.debugPerformanceAnalysis({
+        scriptName: 'TestScript',
+        scriptContent: 'Go to Field ["TestField"]\nLoop\n  Loop\n    Loop\n      Exit Loop\n    End Loop\n  End Loop\nEnd Loop'
+      });
+
+      expect(result.content[0].text).toContain('TestScript');
+      expect(result.content[0].text).toContain('bottlenecks');
+      expect(result.content[0].text).toContain('nested_loops');
+    });
+
+    it('analyzes script complexity', async () => {
+      const result = await fmMCP.debugScriptComplexity({
+        scriptName: 'TestScript',
+        scriptContent: 'If [condition1]\n  If [condition2]\n    If [condition3]\n      Loop\n        If [condition4]\n          Perform Script ["SubScript"]\n        End If\n      End Loop\n    End If\n  End If\nEnd If'
+      });
+
+      expect(result.content[0].text).toContain('TestScript');
+      expect(result.content[0].text).toContain('metrics');
+      expect(result.content[0].text).toContain('riskLevel');
+      expect(result.content[0].text).toContain('medium');
+    });
+  });
 }); 
