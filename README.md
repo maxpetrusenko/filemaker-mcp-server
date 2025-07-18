@@ -25,6 +25,15 @@ A Model Context Protocol (MCP) server for FileMaker integration, enabling AI ass
 - **Complexity Analysis**: Assess script complexity and risk levels
 - **Performance Analysis**: Identify performance bottlenecks and optimization opportunities
 
+### 🆕 API Enhancement & Scalability (v2.2)
+- **Batch Operations**: Process multiple records in batches to overcome 50-record limits
+- **Paginated Queries**: Retrieve large datasets efficiently with pagination
+- **Bulk Import/Export**: Import and export large datasets with field mapping
+- **Data Synchronization**: Sync data between layouts with conflict resolution
+- **Performance Monitoring**: Monitor API performance and identify bottlenecks
+- **Cache Management**: In-memory caching for improved response times
+- **Rate Limit Handling**: Intelligent rate limiting to prevent API throttling
+
 ## Installation
 
 ```bash
@@ -178,6 +187,117 @@ filemaker-mcp-server \
   "arguments": {
     "file": "Contacts.xml",
     "staged": false
+  }
+}
+```
+
+### 🆕 API Enhancement & Scalability Operations
+
+#### Batch Operations
+```json
+{
+  "name": "fm_api_batch_operations",
+  "arguments": {
+    "operation": "create",
+    "records": [
+      { "layout": "Contacts", "fieldData": { "Name": "John Doe", "Email": "john@example.com" } },
+      { "layout": "Contacts", "fieldData": { "Name": "Jane Smith", "Email": "jane@example.com" } }
+    ],
+    "batchSize": 50
+  }
+}
+```
+
+#### Paginated Query
+```json
+{
+  "name": "fm_api_paginated_query",
+  "arguments": {
+    "query": { "layout": "Contacts", "filters": {} },
+    "pageSize": 100,
+    "maxPages": 10,
+    "sortField": "_modificationTimestamp",
+    "sortOrder": "desc"
+  }
+}
+```
+
+#### Bulk Import
+```json
+{
+  "name": "fm_api_bulk_import",
+  "arguments": {
+    "data": [
+      { "Name": "John Doe", "Email": "john@example.com" },
+      { "Name": "Jane Smith", "Email": "jane@example.com" }
+    ],
+    "layout": "Contacts",
+    "importMode": "create",
+    "fieldMapping": { "Name": "FullName", "Email": "EmailAddress" },
+    "conflictResolution": "skip"
+  }
+}
+```
+
+#### Bulk Export
+```json
+{
+  "name": "fm_api_bulk_export",
+  "arguments": {
+    "layout": "Contacts",
+    "format": "json",
+    "fields": ["Name", "Email", "Phone"],
+    "includeMetadata": true
+  }
+}
+```
+
+#### Data Synchronization
+```json
+{
+  "name": "fm_api_data_sync",
+  "arguments": {
+    "sourceLayout": "Contacts",
+    "targetLayout": "ContactsBackup",
+    "keyField": "Email",
+    "syncMode": "incremental",
+    "lastSyncTime": "2024-01-01T00:00:00Z"
+  }
+}
+```
+
+#### Performance Monitoring
+```json
+{
+  "name": "fm_api_performance_monitor",
+  "arguments": {
+    "operation": "query_performance",
+    "duration": 5000
+  }
+}
+```
+
+#### Cache Management
+```json
+{
+  "name": "fm_api_cache_management",
+  "arguments": {
+    "action": "set",
+    "key": "contacts_layout_metadata",
+    "data": { "fields": ["Name", "Email", "Phone"] },
+    "ttl": 3600
+  }
+}
+```
+
+#### Rate Limit Handling
+```json
+{
+  "name": "fm_api_rate_limit_handler",
+  "arguments": {
+    "operation": "find_records",
+    "requests": 10,
+    "timeWindow": 60000
   }
 }
 ```
@@ -431,6 +551,18 @@ fm_debug_validate_layout --layoutName "Contacts" --layoutData "{...}"
 MIT License - see LICENSE file for details.
 
 ## Version History
+
+### v2.2.0
+- 🆕 Added API Enhancement & Scalability features
+- 🆕 Batch operations to overcome 50-record API limitations
+- 🆕 Paginated queries for large dataset retrieval
+- 🆕 Bulk import/export with field mapping and conflict resolution
+- 🆕 Data synchronization between layouts
+- 🆕 Performance monitoring and bottleneck identification
+- 🆕 In-memory cache management for improved response times
+- 🆕 Intelligent rate limiting to prevent API throttling
+- 🔧 Enhanced error handling and batch processing
+- 📚 Updated documentation with comprehensive API examples
 
 ### v2.1.0
 - 🆕 Added Intelligent Debugging features

@@ -10,6 +10,9 @@ export declare class FileMakerMCP {
     private client;
     private token?;
     private config;
+    private cache;
+    private requestHistory;
+    private rateLimits;
     constructor(config: FileMakerConfig);
     private authenticate;
     private setupHandlers;
@@ -98,6 +101,14 @@ export declare class FileMakerMCP {
     debugErrorResolution(args: any): Promise<any>;
     debugPerformanceAnalysis(args: any): Promise<any>;
     debugScriptComplexity(args: any): Promise<any>;
+    apiBatchOperations(args: any): Promise<any>;
+    apiPaginatedQuery(args: any): Promise<any>;
+    apiBulkImport(args: any): Promise<any>;
+    apiBulkExport(args: any): Promise<any>;
+    apiDataSync(args: any): Promise<any>;
+    apiPerformanceMonitor(args: any): Promise<any>;
+    apiCacheManagement(args: any): Promise<any>;
+    apiRateLimitHandler(args: any): Promise<any>;
     private analyzeScriptContent;
     private generateDebugRecommendations;
     private calculateComplexityScore;
@@ -113,4 +124,20 @@ export declare class FileMakerMCP {
     private getScriptData;
     private saveToGit;
     run(): Promise<void>;
+    private chunkArray;
+    private delay;
+    private batchCreateRecords;
+    private batchUpdateRecords;
+    private batchDeleteRecords;
+    private mapFields;
+    private findExistingRecord;
+    private filterFields;
+    private convertToCSV;
+    private convertToXML;
+    private getAllRecords;
+    private findRecordByKey;
+    private testConnection;
+    private testQueryPerformance;
+    private testBatchPerformance;
+    private generatePerformanceRecommendations;
 }

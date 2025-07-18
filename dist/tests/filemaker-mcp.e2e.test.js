@@ -221,4 +221,130 @@ describe('FileMakerMCP E2E', () => {
             expect(result.content[0].text).toContain('medium');
         });
     });
+    describe('API Enhancement & Scalability', () => {
+        it('performs batch operations on multiple records', async () => {
+            const result = await fmMCP.apiBatchOperations({
+                operation: 'create',
+                records: [
+                    { layout: 'Contacts', fieldData: { Name: 'John Doe', Email: 'john@example.com' } },
+                    { layout: 'Contacts', fieldData: { Name: 'Jane Smith', Email: 'jane@example.com' } }
+                ],
+                batchSize: 2
+            });
+            expect(result.content[0].text).toContain('operation');
+            expect(result.content[0].text).toContain('totalRecords');
+            expect(result.content[0].text).toContain('totalBatches');
+        });
+        it('performs paginated queries for large datasets', async () => {
+            // Mock authentication
+            nock(config.host)
+                .post(`/fmi/data/v1/databases/${config.database}/sessions`)
+                .reply(200, { response: { token: 'mock-token' }, messages: [{ code: '0', message: 'OK' }] });
+            // Mock paginated query responses
+            nock(config.host)
+                .get(`/fmi/data/v1/databases/${config.database}/layouts/Contacts/records`)
+                .query(true)
+                .reply(200, {
+                response: {
+                    data: Array(10).fill({ fieldData: { Name: 'Test Contact' }, recordId: '1' })
+                },
+                messages: [{ code: '0', message: 'OK' }]
+            });
+            nock(config.host)
+                .get(`/fmi/data/v1/databases/${config.database}/layouts/Contacts/records`)
+                .query(true)
+                .reply(200, {
+                response: {
+                    data: Array(5).fill({ fieldData: { Name: 'Test Contact' }, recordId: '2' })
+                },
+                messages: [{ code: '0', message: 'OK' }]
+            });
+            const result = await fmMCP.apiPaginatedQuery({
+                query: { layout: 'Contacts', filters: {} },
+                pageSize: 10,
+                maxPages: 2
+            });
+            expect(result.content[0].text).toContain('query');
+            expect(result.content[0].text).toContain('pagination');
+            expect(result.content[0].text).toContain('totalRecords');
+        });
+        it('performs bulk import operations', async () => {
+            const result = await fmMCP.apiBulkImport({
+                data: [
+                    { Name: 'John Doe', Email: 'john@example.com' },
+                    { Name: 'Jane Smith', Email: 'jane@example.com' }
+                ],
+                layout: 'Contacts',
+                importMode: 'create'
+            });
+            expect(result.content[0].text).toContain('bulk_import');
+            expect(result.content[0].text).toContain('totalRecords');
+            expect(result.content[0].text).toContain('successful');
+        });
+        it('performs bulk export operations', async () => {
+            const result = await fmMCP.apiBulkExport({
+                layout: 'Contacts',
+                format: 'json',
+                includeMetadata: true
+            });
+            expect(result.content[0].text).toContain('bulk_export');
+            expect(result.content[0].text).toContain('recordCount');
+            expect(result.content[0].text).toContain('data');
+        });
+        it('performs data synchronization between layouts', async () => {
+            const result = await fmMCP.apiDataSync({
+                sourceLayout: 'Contacts',
+                targetLayout: 'ContactsBackup',
+                keyField: 'Email',
+                syncMode: 'incremental'
+            });
+            expect(result.content[0].text).toContain('data_sync');
+            expect(result.content[0].text).toContain('sourceLayout');
+            expect(result.content[0].text).toContain('targetLayout');
+        });
+        it('monitors API performance', async () => {
+            const result = await fmMCP.apiPerformanceMonitor({
+                operation: 'connection_test',
+                duration: 1000
+            });
+            expect(result.content[0].text).toContain('performance_monitor');
+            expect(result.content[0].text).toContain('testType');
+            expect(result.content[0].text).toContain('metrics');
+        });
+        it('manages cache operations', async () => {
+            // Test cache set
+            const setResult = await fmMCP.apiCacheManagement({
+                action: 'set',
+                key: 'test_key',
+                data: { test: 'data' },
+                ttl: 3600
+            });
+            expect(setResult.content[0].text).toContain('cache_set');
+            expect(setResult.content[0].text).toContain('success');
+            // Test cache get
+            const getResult = await fmMCP.apiCacheManagement({
+                action: 'get',
+                key: 'test_key'
+            });
+            expect(getResult.content[0].text).toContain('cache_get');
+            expect(getResult.content[0].text).toContain('found');
+            // Test cache stats
+            const statsResult = await fmMCP.apiCacheManagement({
+                action: 'stats',
+                key: 'test_key'
+            });
+            expect(statsResult.content[0].text).toContain('cache_stats');
+            expect(statsResult.content[0].text).toContain('size');
+        });
+        it('handles rate limiting', async () => {
+            const result = await fmMCP.apiRateLimitHandler({
+                operation: 'find_records',
+                requests: 5,
+                timeWindow: 60000
+            });
+            expect(result.content[0].text).toContain('rate_limit_handler');
+            expect(result.content[0].text).toContain('requestCount');
+            expect(result.content[0].text).toContain('limit');
+        });
+    });
 });
