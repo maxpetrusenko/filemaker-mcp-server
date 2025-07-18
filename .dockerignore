@@ -1,0 +1,8 @@
+node_modules
+src
+tests
+.git
+.gitignore
+Dockerfile
+README.md
+*.log 

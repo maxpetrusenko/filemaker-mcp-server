@@ -1,0 +1,12 @@
+{
+  "filemaker": {
+    "command": "npx",
+    "args": [
+      "filemaker-mcp-server",
+      "--host", "https://your-server",
+      "--database", "MyDB",
+      "--username", "user",
+      "--password", "pass"
+    ]
+  }
+} 
