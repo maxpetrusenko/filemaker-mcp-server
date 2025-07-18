@@ -318,4 +318,6 @@ MIT License - see LICENSE file for details.
 - Script execution support
 - Layout metadata retrieval
 - Docker support
-- Claude integration examples 
+- Claude integration examples
+
+file maker mcp cursor claude code cline gemini cli claude desktop github
