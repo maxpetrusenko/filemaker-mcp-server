@@ -1,5 +1,5 @@
 {
-  "name": "@wmaxpetrusenko/filemaker-mcp-server",
+  "name": "@maxpetrusenko/filemaker-mcp-server",
   "version": "2.5.0",
   "description": "A comprehensive FileMaker MCP server with global search, DDR export, and relationship analysis",
   "main": "dist/src/index.js",
@@ -10,8 +10,7 @@
     "build": "tsc",
     "test": "jest",
     "start": "node dist/src/index.js",
-    "cleanup": "./cleanup.sh",
-    "prepublishOnly": "npm run cleanup && npm run build"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "filemaker",
@@ -39,10 +38,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/wmaxpetrusenko/filemaker-mcp-server.git"
+    "url": "https://github.com/maxpetrusenko/filemaker-mcp-server.git"
   },
   "bugs": {
-    "url": "https://github.com/wmaxpetrusenko/filemaker-mcp-server/issues"
+    "url": "https://github.com/maxpetrusenko/filemaker-mcp-server/issues"
   },
-  "homepage": "https://github.com/wmaxpetrusenko/filemaker-mcp-server#readme"
+  "homepage": "https://github.com/maxpetrusenko/filemaker-mcp-server#readme"
 }
