@@ -79,7 +79,36 @@ export class FileMakerMCP {
       this.client.defaults.headers['Authorization'] = `Bearer ${this.token}`;
       return this.token;
     } catch (error: any) {
-      throw new Error(`FileMaker authentication failed: ${error}`);
+      let detailedMessage = 'FileMaker authentication failed';
+      
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 401) {
+          detailedMessage = `Authentication failed: Invalid username or password. Please check your FileMaker credentials.`;
+        } else if (status === 403) {
+          detailedMessage = `Access denied: The user does not have permission to access this database. Please check user privileges in FileMaker.`;
+        } else if (status === 404) {
+          detailedMessage = `Database not found: The specified database "${this.config.database}" does not exist or is not accessible. Please check the database name and permissions.`;
+        } else if (status === 500) {
+          detailedMessage = `Server error: FileMaker server encountered an error during authentication. This could be due to server configuration issues.`;
+        } else {
+          detailedMessage = `Authentication failed with status code ${status}. Please check your FileMaker server configuration.`;
+        }
+      } else if (error.code === 'ENOTFOUND') {
+        detailedMessage = `Connection failed: Cannot reach FileMaker server at ${this.config.host}. Please check:
+1. The server URL is correct
+2. The server is running and accessible
+3. Network connectivity is available`;
+      } else if (error.code === 'ECONNREFUSED') {
+        detailedMessage = `Connection refused: FileMaker server at ${this.config.host} is not accepting connections. Please check:
+1. The server is running
+2. The port is correct
+3. Firewall settings allow the connection`;
+      } else {
+        detailedMessage = `Authentication failed: ${error.message || 'Unknown error'}`;
+      }
+      
+      throw new Error(detailedMessage);
     }
   }
 
@@ -691,14 +720,19 @@ export class FileMakerMCP {
           }
         }
 
-        // Create detailed error message
-        let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+        // Use the original error message if it's already detailed, otherwise create a generic one
+        let detailedMessage = error.message;
         
-        if (errorDetails.filemakerErrors.length > 0) {
-          const errorList = errorDetails.filemakerErrors.map((err: any) => 
-            `Error ${err.code}: ${err.message}`
-          ).join('; ');
-          detailedMessage += ` - ${errorList}`;
+        // If the error message is generic, enhance it with status code and FileMaker details
+        if (error.message.includes('Request failed with status code') || error.message.includes('FileMaker authentication failed')) {
+          detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+          
+          if (errorDetails.filemakerErrors.length > 0) {
+            const errorList = errorDetails.filemakerErrors.map((err: any) => 
+              `Error ${err.code}: ${err.message}`
+            ).join('; ');
+            detailedMessage += ` - ${errorList}`;
+          }
         }
 
         // Write final error message to file
@@ -809,13 +843,39 @@ export class FileMakerMCP {
         }
       }
 
-      let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+      let detailedMessage = '';
+      
+      // Provide specific error messages based on status codes
+      const status = errorDetails.status;
+      if (status === 401) {
+        detailedMessage = `Authentication failed: Invalid username or password. Please check your FileMaker credentials.`;
+      } else if (status === 403) {
+        detailedMessage = `Access denied: The user does not have permission to execute scripts. Please check user privileges in FileMaker.`;
+      } else if (status === 404) {
+        detailedMessage = `Script "${script}" not found or not accessible via Data API. Possible causes:
+1. Script name is incorrect
+2. Script is not published for web access
+3. Data API is not enabled for this database
+4. Script requires parameters that are not provided`;
+      } else if (status === 405) {
+        detailedMessage = `Method not allowed: Script execution is not supported via Data API. Please check if:
+1. Data API is enabled for this database
+2. Scripts are configured for web access
+3. The script endpoint is properly configured`;
+      } else if (status === 500) {
+        detailedMessage = `Server error: FileMaker server encountered an error. This could be due to:
+1. Script execution error
+2. Database configuration issue
+3. Server overload`;
+      } else {
+        detailedMessage = `Request failed with status code ${status || 'unknown'}`;
+      }
       
       if (errorDetails.filemakerErrors.length > 0) {
         const errorList = errorDetails.filemakerErrors.map((err: any) => 
           `Error ${err.code}: ${err.message}`
         ).join('; ');
-        detailedMessage += ` - ${errorList}`;
+        detailedMessage += `\n\nFileMaker Error Details: ${errorList}`;
       }
 
       throw new Error(detailedMessage);
@@ -871,13 +931,39 @@ export class FileMakerMCP {
         }
       }
 
-      let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+      let detailedMessage = '';
+      
+      // Provide specific error messages based on status codes
+      const status = errorDetails.status;
+      if (status === 401) {
+        detailedMessage = `Authentication failed: Invalid username or password. Please check your FileMaker credentials.`;
+      } else if (status === 403) {
+        detailedMessage = `Access denied: The user does not have permission to access layout metadata. Please check user privileges in FileMaker.`;
+      } else if (status === 404) {
+        detailedMessage = `Layout "${layout}" not found or not accessible via Data API. Possible causes:
+1. Layout name is incorrect
+2. Layout is not published for web access
+3. Data API is not enabled for this database
+4. Layout requires specific permissions`;
+      } else if (status === 405) {
+        detailedMessage = `Method not allowed: Layout metadata access is not supported via Data API. Please check if:
+1. Data API is enabled for this database
+2. Layouts are configured for web access
+3. The layout endpoint is properly configured`;
+      } else if (status === 500) {
+        detailedMessage = `Server error: FileMaker server encountered an error. This could be due to:
+1. Layout configuration error
+2. Database configuration issue
+3. Server overload`;
+      } else {
+        detailedMessage = `Request failed with status code ${status || 'unknown'}`;
+      }
       
       if (errorDetails.filemakerErrors.length > 0) {
         const errorList = errorDetails.filemakerErrors.map((err: any) => 
           `Error ${err.code}: ${err.message}`
         ).join('; ');
-        detailedMessage += ` - ${errorList}`;
+        detailedMessage += `\n\nFileMaker Error Details: ${errorList}`;
       }
 
       // Write final error message to file
