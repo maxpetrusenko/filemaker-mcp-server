@@ -4,7 +4,8 @@ import { CallToolRequestSchema, ListToolsRequestSchema, } from '@modelcontextpro
 import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import * as fs from 'fs/promises';
+import * as fs from 'fs';
+import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 const execAsync = promisify(exec);
 export class FileMakerMCP {
@@ -21,22 +22,26 @@ export class FileMakerMCP {
         delete_record: 50
     };
     constructor(config) {
+        // DEBUG: Log constructor call
+        fs.writeFileSync('/tmp/filemaker-constructor.log', `Constructor called with config: ${JSON.stringify(config)}`, 'utf8');
         this.config = config;
         this.server = new Server({
             name: 'filemaker-mcp',
-            version: '2.0.0', // Updated version for v2
-        }, {
-            capabilities: {
-                tools: {},
-            },
+            version: '1.0.0',
         });
+        // DEBUG: Log server creation
+        fs.writeFileSync('/tmp/filemaker-server-created.log', 'Server created successfully', 'utf8');
         this.client = axios.create({
             baseURL: `${config.host}/fmi/data/v1/databases/${config.database}`,
             headers: {
                 'Content-Type': 'application/json',
             },
         });
+        // DEBUG: Log client creation
+        fs.writeFileSync('/tmp/filemaker-client-created.log', 'Axios client created successfully', 'utf8');
         this.setupHandlers();
+        // DEBUG: Log setup completion
+        fs.writeFileSync('/tmp/filemaker-setup-complete.log', 'Setup handlers completed', 'utf8');
     }
     async authenticate() {
         try {
@@ -58,7 +63,11 @@ export class FileMakerMCP {
         }
     }
     setupHandlers() {
+        // DEBUG: Log that setupHandlers is being called
+        fs.writeFileSync('/tmp/filemaker-setup-handlers.log', 'setupHandlers method called', 'utf8');
         this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+            // DEBUG: Log that ListToolsRequestSchema handler is being called
+            fs.writeFileSync('/tmp/filemaker-list-tools.log', 'ListToolsRequestSchema handler called', 'utf8');
             return {
                 tools: [
                     // Existing FileMaker CRUD tools
@@ -311,298 +320,213 @@ export class FileMakerMCP {
                     },
                     {
                         name: 'fm_debug_suggest_fixes',
-                        description: 'AI-powered error analysis and fix suggestions for a FileMaker script.',
+                        description: 'Suggest fixes for common FileMaker script errors and issues.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                scriptName: { type: 'string', description: 'Name of the script with the error' },
-                                errorMessage: { type: 'string', description: 'Error message from the script' },
-                                scriptContent: { type: 'string', description: 'Content of the script (optional for context)' },
+                                errorMessage: { type: 'string', description: 'Error message to analyze' },
+                                scriptContent: { type: 'string', description: 'Script content (optional)' },
                             },
-                            required: ['scriptName', 'errorMessage'],
+                            required: ['errorMessage'],
                         },
                     },
                     {
                         name: 'fm_debug_optimize_script',
-                        description: 'Optimize a FileMaker script for performance or readability.',
+                        description: 'Optimize FileMaker script for better performance and maintainability.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                scriptName: { type: 'string', description: 'Name of the script to optimize' },
-                                scriptContent: { type: 'string', description: 'Content of the script to optimize' },
+                                scriptContent: { type: 'string', description: 'Script content to optimize' },
                                 optimizationType: {
                                     type: 'string',
-                                    description: 'Type of optimization: "performance" or "readability"',
-                                    enum: ['performance', 'readability'],
+                                    description: 'Type of optimization',
+                                    enum: ['performance', 'readability', 'maintainability'],
                                     default: 'performance'
                                 },
                             },
-                            required: ['scriptName', 'scriptContent'],
+                            required: ['scriptContent'],
                         },
                     },
                     {
                         name: 'fm_debug_validate_layout',
-                        description: 'Validate the structure of a FileMaker layout for common issues.',
+                        description: 'Validate FileMaker layout structure and field configurations.',
                         inputSchema: {
                             type: 'object',
                             properties: {
                                 layoutName: { type: 'string', description: 'Name of the layout to validate' },
-                                layoutData: { type: 'object', description: 'Data of the layout to validate' },
+                                layoutData: { type: 'object', description: 'Layout data to validate' },
                             },
-                            required: ['layoutName', 'layoutData'],
+                            required: ['layoutName'],
                         },
                     },
                     {
                         name: 'fm_debug_error_resolution',
-                        description: 'Resolve specific FileMaker error codes with steps and examples.',
+                        description: 'Provide detailed error resolution steps for FileMaker errors.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                errorCode: { type: 'string', description: 'Error code to resolve' },
-                                errorContext: { type: 'object', description: 'Context of the error (optional)' },
-                                scriptName: { type: 'string', description: 'Name of the script (if applicable)' },
+                                errorCode: { type: 'string', description: 'FileMaker error code' },
+                                errorContext: { type: 'object', description: 'Error context information' },
+                                scriptName: { type: 'string', description: 'Script name where error occurred' },
                             },
                             required: ['errorCode'],
                         },
                     },
                     {
                         name: 'fm_debug_performance_analysis',
-                        description: 'Analyze a FileMaker script for performance issues and bottlenecks.',
+                        description: 'Analyze FileMaker script performance and provide optimization recommendations.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                scriptName: { type: 'string', description: 'Name of the script to analyze' },
-                                scriptContent: { type: 'string', description: 'Content of the script to analyze' },
-                                executionData: { type: 'object', description: 'Data from script execution (optional)' },
+                                scriptContent: { type: 'string', description: 'Script content to analyze' },
+                                executionData: { type: 'object', description: 'Execution data (optional)' },
                             },
-                            required: ['scriptName', 'scriptContent'],
+                            required: ['scriptContent'],
                         },
                     },
                     {
                         name: 'fm_debug_script_complexity',
-                        description: 'Analyze a FileMaker script for complexity metrics and risk level.',
+                        description: 'Analyze FileMaker script complexity and provide refactoring suggestions.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                scriptName: { type: 'string', description: 'Name of the script to analyze' },
-                                scriptContent: { type: 'string', description: 'Content of the script to analyze' },
+                                scriptContent: { type: 'string', description: 'Script content to analyze' },
                             },
-                            required: ['scriptName', 'scriptContent'],
+                            required: ['scriptContent'],
                         },
                     },
                     // NEW: API Enhancement & Scalability Tools
                     {
                         name: 'fm_api_batch_operations',
-                        description: 'Perform batch operations (create, update, delete) on multiple records.',
+                        description: 'Perform batch operations on multiple FileMaker records.',
                         inputSchema: {
                             type: 'object',
                             properties: {
                                 operation: {
                                     type: 'string',
-                                    description: 'Operation to perform: "create", "update", or "delete"',
+                                    description: 'Type of batch operation',
                                     enum: ['create', 'update', 'delete'],
-                                    required: true
                                 },
-                                records: {
-                                    type: 'array',
-                                    description: 'Array of record objects to process',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            layout: { type: 'string', description: 'Layout name' },
-                                            recordId: { type: 'string', description: 'Record ID for update/delete (optional)' },
-                                            fieldData: {
-                                                type: 'object',
-                                                description: 'Field data for new records or updates',
-                                            },
-                                        },
-                                        required: ['layout', 'fieldData'],
-                                    },
-                                    required: true
-                                },
+                                layout: { type: 'string', description: 'Layout name' },
+                                records: { type: 'array', description: 'Array of records to process' },
                                 batchSize: {
                                     type: 'number',
-                                    description: 'Number of records to process in each batch (default: 50)',
-                                    default: 50,
+                                    description: 'Number of records to process in each batch',
+                                    default: 50
                                 },
                             },
-                            required: ['operation', 'records'],
+                            required: ['operation', 'layout', 'records'],
                         },
                     },
                     {
                         name: 'fm_api_paginated_query',
-                        description: 'Perform a paginated query to retrieve large datasets from FileMaker.',
+                        description: 'Execute paginated queries with advanced filtering and sorting.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                query: {
-                                    type: 'object',
-                                    description: 'Find query object with field names and values',
-                                    properties: {
-                                        layout: { type: 'string', description: 'Layout name' },
-                                        filters: {
-                                            type: 'object',
-                                            description: 'Additional filters for pagination (e.g., _modificationTimestamp)',
-                                        },
-                                    },
-                                    required: ['layout'],
+                                layout: { type: 'string', description: 'Layout name' },
+                                query: { type: 'object', description: 'Find query object' },
+                                page: {
+                                    type: 'number',
+                                    description: 'Page number',
+                                    default: 1
                                 },
                                 pageSize: {
                                     type: 'number',
-                                    description: 'Number of records to return per page (default: 50)',
-                                    default: 50,
+                                    description: 'Records per page',
+                                    default: 100
                                 },
-                                maxPages: {
-                                    type: 'number',
-                                    description: 'Maximum number of pages to fetch (default: 10)',
-                                    default: 10,
-                                },
-                                sortField: {
-                                    type: 'string',
-                                    description: 'Field to sort by (e.g., _modificationTimestamp)',
-                                },
-                                sortOrder: {
-                                    type: 'string',
-                                    description: 'Sort order: "asc" or "desc"',
-                                    default: 'asc',
-                                },
+                                sort: { type: 'array', description: 'Sort criteria' },
+                                fields: { type: 'array', description: 'Fields to return' },
                             },
-                            required: ['query'],
+                            required: ['layout'],
                         },
                     },
                     {
                         name: 'fm_api_bulk_import',
-                        description: 'Import multiple records into FileMaker in batches.',
+                        description: 'Bulk import data into FileMaker with validation and error handling.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                data: {
-                                    type: 'array',
-                                    description: 'Array of record objects to import',
-                                    items: {
-                                        type: 'object',
-                                        properties: {
-                                            layout: { type: 'string', description: 'Layout name' },
-                                            recordId: { type: 'string', description: 'Record ID for update (optional)' },
-                                            fieldData: {
-                                                type: 'object',
-                                                description: 'Field data for new records or updates',
-                                            },
-                                        },
-                                        required: ['layout', 'fieldData'],
-                                    },
-                                    required: true
-                                },
-                                layout: {
+                                layout: { type: 'string', description: 'Layout name' },
+                                data: { type: 'array', description: 'Data to import' },
+                                fieldMapping: { type: 'object', description: 'Field mapping configuration' },
+                                validationRules: { type: 'object', description: 'Validation rules' },
+                                duplicateHandling: {
                                     type: 'string',
-                                    description: 'Layout name to import into',
-                                    required: true
-                                },
-                                importMode: {
-                                    type: 'string',
-                                    description: 'Import mode: "create" or "update"',
-                                    enum: ['create', 'update'],
-                                    default: 'create',
-                                },
-                                fieldMapping: {
-                                    type: 'object',
-                                    description: 'Optional mapping of source field names to target field names',
-                                },
-                                conflictResolution: {
-                                    type: 'string',
-                                    description: 'Strategy for handling conflicts: "skip", "update", or "create"',
+                                    description: 'How to handle duplicates',
                                     enum: ['skip', 'update', 'create'],
-                                    default: 'skip',
+                                    default: 'skip'
                                 },
                             },
-                            required: ['data', 'layout'],
+                            required: ['layout', 'data'],
                         },
                     },
                     {
                         name: 'fm_api_bulk_export',
-                        description: 'Export multiple records from FileMaker in batches.',
+                        description: 'Bulk export data from FileMaker with filtering and formatting options.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                layout: {
-                                    type: 'string',
-                                    description: 'Layout name to export from',
-                                    required: true
-                                },
+                                layout: { type: 'string', description: 'Layout name' },
                                 format: {
                                     type: 'string',
-                                    description: 'Export format: "json" or "csv"',
-                                    enum: ['json', 'csv'],
-                                    default: 'json',
+                                    description: 'Export format',
+                                    enum: ['json', 'csv', 'xml'],
+                                    default: 'json'
                                 },
-                                filters: {
-                                    type: 'object',
-                                    description: 'Find query object for filtering records (optional)',
-                                },
-                                fields: {
-                                    type: 'array',
-                                    description: 'Array of field names to include in export (optional, default: all)',
-                                },
+                                query: { type: 'object', description: 'Find query object' },
+                                fields: { type: 'array', description: 'Fields to export' },
                                 includeMetadata: {
                                     type: 'boolean',
-                                    description: 'Include metadata (export date, record count, fields) in JSON export',
-                                    default: true,
+                                    description: 'Include metadata in export',
+                                    default: false
                                 },
                             },
-                            required: ['layout', 'format'],
+                            required: ['layout'],
                         },
                     },
                     {
                         name: 'fm_api_data_sync',
-                        description: 'Synchronize data between two FileMaker layouts based on a key field.',
+                        description: 'Synchronize data between FileMaker and external systems.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                sourceLayout: {
+                                layout: { type: 'string', description: 'Layout name' },
+                                syncDirection: {
                                     type: 'string',
-                                    description: 'Source layout name',
-                                    required: true
+                                    description: 'Sync direction',
+                                    enum: ['import', 'export', 'bidirectional'],
+                                    default: 'bidirectional'
                                 },
-                                targetLayout: {
+                                externalData: { type: 'array', description: 'External data to sync' },
+                                keyField: { type: 'string', description: 'Key field for matching records' },
+                                conflictResolution: {
                                     type: 'string',
-                                    description: 'Target layout name',
-                                    required: true
-                                },
-                                syncMode: {
-                                    type: 'string',
-                                    description: 'Sync mode: "incremental" or "full"',
-                                    enum: ['incremental', 'full'],
-                                    default: 'incremental',
-                                },
-                                keyField: {
-                                    type: 'string',
-                                    description: 'Field name that uniquely identifies a record',
-                                    required: true
-                                },
-                                lastSyncTime: {
-                                    type: 'string',
-                                    description: 'Timestamp of the last successful sync (for incremental sync)',
+                                    description: 'Conflict resolution strategy',
+                                    enum: ['filemaker_wins', 'external_wins', 'manual'],
+                                    default: 'filemaker_wins'
                                 },
                             },
-                            required: ['sourceLayout', 'targetLayout', 'keyField'],
+                            required: ['layout'],
                         },
                     },
                     {
                         name: 'fm_api_performance_monitor',
-                        description: 'Monitor FileMaker API performance and identify bottlenecks.',
+                        description: 'Monitor and analyze FileMaker API performance metrics.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                operation: {
-                                    type: 'string',
-                                    description: 'Type of operation to test: "connection_test", "query_performance", "batch_performance"',
-                                    enum: ['connection_test', 'query_performance', 'batch_performance'],
-                                    required: true
-                                },
+                                operation: { type: 'string', description: 'Operation to monitor' },
                                 duration: {
                                     type: 'number',
-                                    description: 'Duration in milliseconds for the test (default: 5000)',
-                                    default: 5000,
+                                    description: 'Monitoring duration in seconds',
+                                    default: 60
+                                },
+                                metrics: {
+                                    type: 'array',
+                                    description: 'Metrics to collect',
+                                    default: ['response_time', 'throughput', 'error_rate']
                                 },
                             },
                             required: ['operation'],
@@ -610,199 +534,138 @@ export class FileMakerMCP {
                     },
                     {
                         name: 'fm_api_cache_management',
-                        description: 'Manage in-memory caching for FileMaker API responses.',
+                        description: 'Manage caching for FileMaker API operations.',
                         inputSchema: {
                             type: 'object',
                             properties: {
                                 action: {
                                     type: 'string',
-                                    description: 'Action to perform: "set", "get", "delete", "clear", or "stats"',
-                                    enum: ['set', 'get', 'delete', 'clear', 'stats'],
-                                    required: true
+                                    description: 'Cache action',
+                                    enum: ['get', 'set', 'clear', 'stats'],
+                                    default: 'get'
                                 },
-                                key: {
-                                    type: 'string',
-                                    description: 'Cache key',
-                                    required: true
-                                },
-                                data: {
-                                    type: 'object',
-                                    description: 'Data to cache (for "set" action)',
-                                },
+                                key: { type: 'string', description: 'Cache key' },
+                                data: { type: 'object', description: 'Data to cache' },
                                 ttl: {
                                     type: 'number',
-                                    description: 'Time-to-live in seconds for cached data (default: 3600)',
-                                    default: 3600,
+                                    description: 'Time to live in seconds',
+                                    default: 300
                                 },
                             },
-                            required: ['action', 'key'],
+                            required: ['action'],
                         },
                     },
                     {
                         name: 'fm_api_rate_limit_handler',
-                        description: 'Handle rate limiting for FileMaker API requests.',
+                        description: 'Handle rate limiting for FileMaker API operations.',
                         inputSchema: {
                             type: 'object',
                             properties: {
-                                operation: {
-                                    type: 'string',
-                                    description: 'Operation type (e.g., "find_records", "create_record")',
-                                    required: true
-                                },
-                                requests: {
+                                operation: { type: 'string', description: 'Operation to rate limit' },
+                                maxRequests: {
                                     type: 'number',
-                                    description: 'Number of requests to simulate',
-                                    default: 10,
+                                    description: 'Maximum requests per time window',
+                                    default: 100
                                 },
                                 timeWindow: {
                                     type: 'number',
-                                    description: 'Time window in milliseconds for rate limiting (default: 60000)',
-                                    default: 60000,
+                                    description: 'Time window in seconds',
+                                    default: 60
+                                },
+                                strategy: {
+                                    type: 'string',
+                                    description: 'Rate limiting strategy',
+                                    enum: ['drop', 'queue', 'throttle'],
+                                    default: 'throttle'
                                 },
                             },
-                            required: ['operation', 'requests'],
+                            required: ['operation'],
                         },
                     },
                 ],
             };
         });
         this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+            // DEBUG: Log that the tool call handler is being called
+            fs.writeFileSync('/tmp/filemaker-handler-called.log', `Tool call handler called with request: ${JSON.stringify(request)}`, 'utf8');
             const { name, arguments: args } = request.params;
+            // DEBUG: Log the tool name and arguments
+            fs.writeFileSync('/tmp/filemaker-tool-details.log', `Tool: ${name}, Args: ${JSON.stringify(args)}`, 'utf8');
             try {
                 if (!this.token) {
                     await this.authenticate();
                 }
+                let result;
                 switch (name) {
-                    // Existing FileMaker CRUD operations
                     case 'fm_find_records':
-                        return await this.findRecords(args);
+                        result = await this.findRecords(args);
+                        break;
                     case 'fm_create_record':
-                        return await this.createRecord(args);
+                        result = await this.createRecord(args);
+                        break;
                     case 'fm_update_record':
-                        return await this.updateRecord(args);
+                        result = await this.updateRecord(args);
+                        break;
                     case 'fm_delete_record':
-                        return await this.deleteRecord(args);
+                        result = await this.deleteRecord(args);
+                        break;
                     case 'fm_execute_script':
-                        return await this.executeScript(args);
+                        result = await this.executeScript(args);
+                        break;
                     case 'fm_get_layout_metadata':
-                        return await this.getLayoutMetadata(args);
-                    // NEW: Git-based Version Control operations
-                    case 'fm_git_export_layout':
-                        return await this.gitExportLayout(args);
-                    case 'fm_git_export_script':
-                        return await this.gitExportScript(args);
-                    case 'fm_git_commit_changes':
-                        return await this.gitCommitChanges(args);
-                    case 'fm_git_push_changes':
-                        return await this.gitPushChanges(args);
-                    case 'fm_git_pull_changes':
-                        return await this.gitPullChanges(args);
-                    case 'fm_git_status':
-                        return await this.gitStatus(args);
-                    case 'fm_git_diff':
-                        return await this.gitDiff(args);
-                    // NEW: Intelligent Debugging operations
-                    case 'fm_debug_analyze_script':
-                        return await this.debugAnalyzeScript(args);
-                    case 'fm_debug_suggest_fixes':
-                        return await this.debugSuggestFixes(args);
-                    case 'fm_debug_optimize_script':
-                        return await this.debugOptimizeScript(args);
-                    case 'fm_debug_validate_layout':
-                        return await this.debugValidateLayout(args);
-                    case 'fm_debug_error_resolution':
-                        return await this.debugErrorResolution(args);
-                    case 'fm_debug_performance_analysis':
-                        return await this.debugPerformanceAnalysis(args);
-                    case 'fm_debug_script_complexity':
-                        return await this.debugScriptComplexity(args);
-                    // NEW: API Enhancement & Scalability operations
-                    case 'fm_api_batch_operations':
-                        return await this.apiBatchOperations(args);
-                    case 'fm_api_paginated_query':
-                        return await this.apiPaginatedQuery(args);
-                    case 'fm_api_bulk_import':
-                        return await this.apiBulkImport(args);
-                    case 'fm_api_bulk_export':
-                        return await this.apiBulkExport(args);
-                    case 'fm_api_data_sync':
-                        return await this.apiDataSync(args);
-                    case 'fm_api_performance_monitor':
-                        return await this.apiPerformanceMonitor(args);
-                    case 'fm_api_cache_management':
-                        return await this.apiCacheManagement(args);
-                    case 'fm_api_rate_limit_handler':
-                        return await this.apiRateLimitHandler(args);
+                        result = await this.getLayoutMetadata(args);
+                        break;
                     default:
                         throw new Error(`Unknown tool: ${name}`);
                 }
+                // DEBUG: Log successful result
+                fs.writeFileSync('/tmp/filemaker-success.log', `Tool ${name} completed successfully`, 'utf8');
+                return result;
             }
             catch (error) {
-                if (error.response?.status === 401) {
-                    await this.authenticate();
-                    // Re-run the handler logic after re-authentication
-                    switch (name) {
-                        case 'fm_find_records':
-                            return await this.findRecords(args);
-                        case 'fm_create_record':
-                            return await this.createRecord(args);
-                        case 'fm_update_record':
-                            return await this.updateRecord(args);
-                        case 'fm_delete_record':
-                            return await this.deleteRecord(args);
-                        case 'fm_execute_script':
-                            return await this.executeScript(args);
-                        case 'fm_get_layout_metadata':
-                            return await this.getLayoutMetadata(args);
-                        case 'fm_git_export_layout':
-                            return await this.gitExportLayout(args);
-                        case 'fm_git_export_script':
-                            return await this.gitExportScript(args);
-                        case 'fm_git_commit_changes':
-                            return await this.gitCommitChanges(args);
-                        case 'fm_git_push_changes':
-                            return await this.gitPushChanges(args);
-                        case 'fm_git_pull_changes':
-                            return await this.gitPullChanges(args);
-                        case 'fm_git_status':
-                            return await this.gitStatus(args);
-                        case 'fm_git_diff':
-                            return await this.gitDiff(args);
-                        case 'fm_debug_analyze_script':
-                            return await this.debugAnalyzeScript(args);
-                        case 'fm_debug_suggest_fixes':
-                            return await this.debugSuggestFixes(args);
-                        case 'fm_debug_optimize_script':
-                            return await this.debugOptimizeScript(args);
-                        case 'fm_debug_validate_layout':
-                            return await this.debugValidateLayout(args);
-                        case 'fm_debug_error_resolution':
-                            return await this.debugErrorResolution(args);
-                        case 'fm_debug_performance_analysis':
-                            return await this.debugPerformanceAnalysis(args);
-                        case 'fm_debug_script_complexity':
-                            return await this.debugScriptComplexity(args);
-                        case 'fm_api_batch_operations':
-                            return await this.apiBatchOperations(args);
-                        case 'fm_api_paginated_query':
-                            return await this.apiPaginatedQuery(args);
-                        case 'fm_api_bulk_import':
-                            return await this.apiBulkImport(args);
-                        case 'fm_api_bulk_export':
-                            return await this.apiBulkExport(args);
-                        case 'fm_api_data_sync':
-                            return await this.apiDataSync(args);
-                        case 'fm_api_performance_monitor':
-                            return await this.apiPerformanceMonitor(args);
-                        case 'fm_api_cache_management':
-                            return await this.apiCacheManagement(args);
-                        case 'fm_api_rate_limit_handler':
-                            return await this.apiRateLimitHandler(args);
-                        default:
-                            throw new Error(`Unknown tool: ${name}`);
+                // DEBUG: Log that error handling is being executed
+                fs.writeFileSync('/tmp/filemaker-error-handler.log', `Error handler called for tool ${name}`, 'utf8');
+                // DEBUG: Log the raw error to see its structure
+                const errorLog = {
+                    timestamp: new Date().toISOString(),
+                    toolName: name,
+                    errorType: typeof error,
+                    errorMessage: error.message,
+                    errorResponse: error.response,
+                    errorData: error.response?.data,
+                    errorStatus: error.response?.status,
+                    errorKeys: Object.keys(error)
+                };
+                fs.writeFileSync('/tmp/filemaker-error-debug.log', JSON.stringify(errorLog, null, 2), 'utf8');
+                // IMPROVED ERROR HANDLING: Capture both HTTP response and FileMaker error details
+                let errorDetails = {
+                    message: error.message || 'Unknown error',
+                    status: null,
+                    filemakerErrors: [],
+                    response: null
+                };
+                // Check if it's an Axios error with response data
+                if (error.response) {
+                    errorDetails.status = error.response.status;
+                    errorDetails.response = error.response.data;
+                    // Extract FileMaker-specific error messages
+                    if (error.response.data && error.response.data.messages) {
+                        errorDetails.filemakerErrors = error.response.data.messages.map((msg) => ({
+                            code: msg.code,
+                            message: msg.message
+                        }));
                     }
                 }
-                throw error;
+                // Create detailed error message
+                let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+                if (errorDetails.filemakerErrors.length > 0) {
+                    const errorList = errorDetails.filemakerErrors.map((err) => `Error ${err.code}: ${err.message}`).join('; ');
+                    detailedMessage += ` - ${errorList}`;
+                }
+                // Write final error message to file
+                fs.writeFileSync('/tmp/filemaker-final-error.log', detailedMessage, 'utf8');
+                // Return enhanced error response with FileMaker details
+                throw new Error(detailedMessage);
             }
         });
     }
@@ -869,27 +732,96 @@ export class FileMakerMCP {
         if (parameter) {
             scriptRequest.scriptParam = parameter;
         }
-        const response = await this.client.post('/scripts', scriptRequest);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: `Script ${script} executed successfully. Result: ${JSON.stringify(response.data.response)}`,
-                },
-            ],
-        };
+        try {
+            const response = await this.client.post('/scripts', scriptRequest);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: `Script ${script} executed successfully. Result: ${JSON.stringify(response.data.response)}`,
+                    },
+                ],
+            };
+        }
+        catch (error) {
+            // Handle error directly in the tool method
+            let errorDetails = {
+                message: error.message || 'Unknown error',
+                status: null,
+                filemakerErrors: [],
+                response: null
+            };
+            if (error.response) {
+                errorDetails.status = error.response.status;
+                errorDetails.response = error.response.data;
+                if (error.response.data && error.response.data.messages) {
+                    errorDetails.filemakerErrors = error.response.data.messages.map((msg) => ({
+                        code: msg.code,
+                        message: msg.message
+                    }));
+                }
+            }
+            let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+            if (errorDetails.filemakerErrors.length > 0) {
+                const errorList = errorDetails.filemakerErrors.map((err) => `Error ${err.code}: ${err.message}`).join('; ');
+                detailedMessage += ` - ${errorList}`;
+            }
+            throw new Error(detailedMessage);
+        }
     }
     async getLayoutMetadata(args) {
+        // DEBUG: Log that this method is being called
+        fs.writeFileSync('/tmp/filemaker-method-called.log', `getLayoutMetadata called with args: ${JSON.stringify(args)}`, 'utf8');
         const { layout } = args;
-        const response = await this.client.get(`/layouts/${layout}`);
-        return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(response.data.response, null, 2),
-                },
-            ],
-        };
+        try {
+            const response = await this.client.get(`/layouts/${layout}`);
+            return {
+                content: [
+                    {
+                        type: 'text',
+                        text: JSON.stringify(response.data.response, null, 2),
+                    },
+                ],
+            };
+        }
+        catch (error) {
+            // DEBUG: Write error details to file to see if this code is being executed
+            const errorLog = {
+                timestamp: new Date().toISOString(),
+                errorType: typeof error,
+                errorMessage: error.message,
+                errorResponse: error.response,
+                errorData: error.response?.data,
+                errorStatus: error.response?.status,
+                errorKeys: Object.keys(error)
+            };
+            fs.writeFileSync('/tmp/filemaker-error-debug.log', JSON.stringify(errorLog, null, 2), 'utf8');
+            // Handle error directly in the tool method
+            let errorDetails = {
+                message: error.message || 'Unknown error',
+                status: null,
+                filemakerErrors: [],
+                response: null
+            };
+            if (error.response) {
+                errorDetails.status = error.response.status;
+                errorDetails.response = error.response.data;
+                if (error.response.data && error.response.data.messages) {
+                    errorDetails.filemakerErrors = error.response.data.messages.map((msg) => ({
+                        code: msg.code,
+                        message: msg.message
+                    }));
+                }
+            }
+            let detailedMessage = `Request failed with status code ${errorDetails.status || 'unknown'}`;
+            if (errorDetails.filemakerErrors.length > 0) {
+                const errorList = errorDetails.filemakerErrors.map((err) => `Error ${err.code}: ${err.message}`).join('; ');
+                detailedMessage += ` - ${errorList}`;
+            }
+            // Write final error message to file
+            fs.writeFileSync('/tmp/filemaker-final-error.log', detailedMessage, 'utf8');
+            throw new Error(detailedMessage);
+        }
     }
     async gitExportLayout(args) {
         const { layout, format = 'xml', gitMessage = 'Export FileMaker layout' } = args;
@@ -1854,7 +1786,7 @@ export class FileMakerMCP {
     }
     async saveToGit(data, fileName) {
         const filePath = path.join(this.config.gitRepoPath || '.', fileName);
-        await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+        await fsPromises.writeFile(filePath, JSON.stringify(data, null, 2), 'utf8');
         return filePath;
     }
     async run() {

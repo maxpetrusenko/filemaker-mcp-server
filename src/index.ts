@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { FileMakerMCP, FileMakerConfig } from './filemaker-mcp.js';
+import * as fs from 'fs';
 
 function parseArgs(): Partial<FileMakerConfig> {
   const args = process.argv.slice(2);
@@ -32,6 +33,9 @@ const config: FileMakerConfig = {
   gitRepoPath: argConfig.gitRepoPath || envConfig.gitRepoPath,
 };
 
+// DEBUG: Log the config
+fs.writeFileSync('./filemaker-index-config.log', `Config: ${JSON.stringify(config)}`, 'utf8');
+
 if (!config.host || !config.database || !config.username || !config.password) {
   console.error('Missing required config. Provide via env or CLI args:');
   console.error('--host, --database, --username, --password');
@@ -39,8 +43,17 @@ if (!config.host || !config.database || !config.username || !config.password) {
   process.exit(1);
 }
 
+// DEBUG: Log that we're creating the server
+fs.writeFileSync('./filemaker-index-server-creation.log', 'Creating FileMakerMCP server', 'utf8');
+
 const server = new FileMakerMCP(config);
+
+// DEBUG: Log that we're running the server
+fs.writeFileSync('./filemaker-index-server-run.log', 'Running FileMakerMCP server', 'utf8');
+
 server.run().catch((err) => {
+  // DEBUG: Log any errors
+  fs.writeFileSync('./filemaker-index-error.log', `Server error: ${err.message}`, 'utf8');
   console.error('FileMaker MCP server error:', err);
   process.exit(1);
 }); 
