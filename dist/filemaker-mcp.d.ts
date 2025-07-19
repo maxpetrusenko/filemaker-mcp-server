@@ -156,5 +156,6 @@ export declare class FileMakerMCP {
     exportDDR(format?: string, includeScripts?: boolean, includeLayouts?: boolean): Promise<any>;
     analyzeRelationships(layout: string, depth?: number): Promise<any>;
     private analyzeDDRRelationships;
+    private cleanCircularReferences;
 }
 //# sourceMappingURL=filemaker-mcp.d.ts.map

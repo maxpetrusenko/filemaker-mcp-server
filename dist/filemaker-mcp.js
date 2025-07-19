@@ -886,6 +886,9 @@ export class FileMakerMCP {
                     case 'fm_get_record_count':
                         try {
                             const layout = request.params.layout;
+                            if (!layout) {
+                                throw new Error('Layout parameter is required for fm_get_record_count');
+                            }
                             const count = await this.getRecordCount(layout);
                             return {
                                 content: [
@@ -1242,11 +1245,13 @@ export class FileMakerMCP {
         const { layout } = args;
         try {
             const response = await this.client.get(`/layouts/${layout}`);
+            // Clean the response data to remove circular references
+            const cleanData = this.cleanCircularReferences(response.data.response);
             return {
                 content: [
                     {
                         type: 'text',
-                        text: JSON.stringify(response.data.response, null, 2),
+                        text: JSON.stringify(cleanData, null, 2),
                     },
                 ],
             };
@@ -2724,9 +2729,17 @@ export class FileMakerMCP {
             const layouts = await this.listLayouts();
             const results = [];
             let totalMatches = 0;
+            let layoutsProcessed = 0;
+            let layoutsFailed = 0;
+            // Debug: Log the search parameters
+            fs.writeFileSync('/tmp/filemaker-global-search-debug.log', `Searching for "${searchText}" in ${layouts.length} layouts, fieldType: ${fieldType}`, 'utf8');
             for (const layout of layouts) {
                 try {
+                    layoutsProcessed++;
                     const layoutData = await this.getLayoutData(layout);
+                    // Debug: Log field count for this layout
+                    const fieldCount = layoutData.meta.fieldMetaData.length;
+                    fs.writeFileSync('/tmp/filemaker-global-search-debug.log', `Layout ${layout}: ${fieldCount} fields`, 'utf8');
                     const fields = layoutData.meta.fieldMetaData.filter((field) => {
                         const matchesSearch = field.name.toLowerCase().includes(searchText.toLowerCase());
                         const matchesType = fieldType === 'all' || field.type === fieldType;
@@ -2750,7 +2763,9 @@ export class FileMakerMCP {
                     }
                 }
                 catch (error) {
-                    // Skip layouts that can't be accessed
+                    layoutsFailed++;
+                    // Debug: Log the error for this layout
+                    fs.writeFileSync('/tmp/filemaker-global-search-debug.log', `Failed to process layout ${layout}: ${error.message}`, 'utf8');
                     continue;
                 }
             }
@@ -2762,6 +2777,8 @@ export class FileMakerMCP {
                 results,
                 summary: {
                     totalLayoutsSearched: layouts.length,
+                    layoutsProcessed,
+                    layoutsFailed,
                     layoutsWithMatches: results.length,
                     totalFieldMatches: totalMatches
                 }
@@ -2956,6 +2973,31 @@ export class FileMakerMCP {
             });
         });
         return Array.from(relationshipMap.values());
+    }
+    cleanCircularReferences(obj, seen = new WeakSet()) {
+        if (obj === null || typeof obj !== 'object') {
+            return obj;
+        }
+        if (seen.has(obj)) {
+            return '[Circular Reference]';
+        }
+        seen.add(obj);
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.cleanCircularReferences(item, seen));
+        }
+        const cleaned = {};
+        for (const key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                // Skip problematic keys that might cause circular references
+                if (key === 'res' || key === 'req' || key === 'socket' || key === 'connection') {
+                    cleaned[key] = '[HTTP Object]';
+                }
+                else {
+                    cleaned[key] = this.cleanCircularReferences(obj[key], seen);
+                }
+            }
+        }
+        return cleaned;
     }
 }
 //# sourceMappingURL=filemaker-mcp.js.map
