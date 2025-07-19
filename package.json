@@ -1,6 +1,6 @@
 {
   "name": "@maxpetrusenko/filemaker-mcp-server",
-  "version": "2.5.8",
+  "version": "2.5.9",
   "description": "A comprehensive FileMaker MCP server with global search, DDR export, and relationship analysis",
   "type": "module",
   "main": "dist/index.js",
