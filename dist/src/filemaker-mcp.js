@@ -649,6 +649,75 @@ export class FileMakerMCP {
                     case 'fm_get_layout_metadata':
                         result = await this.getLayoutMetadata(args);
                         break;
+                    // Git-based Version Control Tools
+                    case 'fm_git_export_layout':
+                        result = await this.gitExportLayout(args);
+                        break;
+                    case 'fm_git_export_script':
+                        result = await this.gitExportScript(args);
+                        break;
+                    case 'fm_git_commit_changes':
+                        result = await this.gitCommitChanges(args);
+                        break;
+                    case 'fm_git_push_changes':
+                        result = await this.gitPushChanges(args);
+                        break;
+                    case 'fm_git_pull_changes':
+                        result = await this.gitPullChanges(args);
+                        break;
+                    case 'fm_git_status':
+                        result = await this.gitStatus(args);
+                        break;
+                    case 'fm_git_diff':
+                        result = await this.gitDiff(args);
+                        break;
+                    // Debug Tools
+                    case 'fm_debug_analyze_script':
+                        result = await this.debugAnalyzeScript(args);
+                        break;
+                    case 'fm_debug_suggest_fixes':
+                        result = await this.debugSuggestFixes(args);
+                        break;
+                    case 'fm_debug_optimize_script':
+                        result = await this.debugOptimizeScript(args);
+                        break;
+                    case 'fm_debug_validate_layout':
+                        result = await this.debugValidateLayout(args);
+                        break;
+                    case 'fm_debug_error_resolution':
+                        result = await this.debugErrorResolution(args);
+                        break;
+                    case 'fm_debug_performance_analysis':
+                        result = await this.debugPerformanceAnalysis(args);
+                        break;
+                    case 'fm_debug_script_complexity':
+                        result = await this.debugScriptComplexity(args);
+                        break;
+                    // API Enhancement Tools
+                    case 'fm_api_batch_operations':
+                        result = await this.apiBatchOperations(args);
+                        break;
+                    case 'fm_api_paginated_query':
+                        result = await this.apiPaginatedQuery(args);
+                        break;
+                    case 'fm_api_bulk_import':
+                        result = await this.apiBulkImport(args);
+                        break;
+                    case 'fm_api_bulk_export':
+                        result = await this.apiBulkExport(args);
+                        break;
+                    case 'fm_api_data_sync':
+                        result = await this.apiDataSync(args);
+                        break;
+                    case 'fm_api_performance_monitor':
+                        result = await this.apiPerformanceMonitor(args);
+                        break;
+                    case 'fm_api_cache_management':
+                        result = await this.apiCacheManagement(args);
+                        break;
+                    case 'fm_api_rate_limit_handler':
+                        result = await this.apiRateLimitHandler(args);
+                        break;
                     default:
                         throw new Error(`Unknown tool: ${name}`);
                 }
