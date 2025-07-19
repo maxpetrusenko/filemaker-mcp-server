@@ -1,7 +1,7 @@
 {
   "name": "filemaker-mcp-server-v2",
-  "version": "2.2.4",
-  "description": "A FileMaker MCP server for Model Context Protocol integration.",
+  "version": "2.2.5",
+  "description": "A FileMaker MCP server",
   "main": "dist/index.js",
   "type": "module",
   "bin": {

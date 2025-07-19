@@ -765,14 +765,17 @@ export class FileMakerMCP {
         };
     }
     async executeScript(args) {
-        const { script, parameter } = args;
-        const scriptRequest = {};
-        if (parameter) {
-            scriptRequest.scriptParam = parameter;
-        }
+        const { script, parameter, layout } = args;
         try {
-            // Use the correct endpoint structure: POST /scripts/{scriptName}
-            const response = await this.client.post(`/scripts/${script}`, scriptRequest);
+            // According to FileMaker Data API docs: Script execution requires layout context
+            // URL structure: /layouts/{layout-name}/script/{script-name}
+            const params = {};
+            if (parameter) {
+                params['script.param'] = parameter; // Use script.param as per docs
+            }
+            // Use a default layout if none provided (DocuSign Log layout we know works)
+            const layoutName = layout || 'DocuSign Log';
+            const response = await this.client.get(`/layouts/${layoutName}/script/${script}`, { params });
             return {
                 content: [
                     {
