@@ -766,12 +766,13 @@ export class FileMakerMCP {
     }
     async executeScript(args) {
         const { script, parameter } = args;
-        const scriptRequest = { script };
+        const scriptRequest = {};
         if (parameter) {
             scriptRequest.scriptParam = parameter;
         }
         try {
-            const response = await this.client.post('/scripts', scriptRequest);
+            // Use the correct endpoint structure: POST /scripts/{scriptName}
+            const response = await this.client.post(`/scripts/${script}`, scriptRequest);
             return {
                 content: [
                     {
