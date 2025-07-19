@@ -34,7 +34,11 @@ const config: FileMakerConfig = {
 };
 
 // DEBUG: Log the config
-fs.writeFileSync('./filemaker-index-config.log', `Config: ${JSON.stringify(config)}`, 'utf8');
+try {
+  fs.writeFileSync('/tmp/filemaker-index-config.log', `Config: ${JSON.stringify(config)}`, 'utf8');
+} catch (e) {
+  // Ignore log write errors
+}
 
 if (!config.host || !config.database || !config.username || !config.password) {
   console.error('Missing required config. Provide via env or CLI args:');
@@ -44,16 +48,28 @@ if (!config.host || !config.database || !config.username || !config.password) {
 }
 
 // DEBUG: Log that we're creating the server
-fs.writeFileSync('./filemaker-index-server-creation.log', 'Creating FileMakerMCP server', 'utf8');
+try {
+  fs.writeFileSync('/tmp/filemaker-index-server-creation.log', 'Creating FileMakerMCP server', 'utf8');
+} catch (e) {
+  // Ignore log write errors
+}
 
 const server = new FileMakerMCP(config);
 
 // DEBUG: Log that we're running the server
-fs.writeFileSync('./filemaker-index-server-run.log', 'Running FileMakerMCP server', 'utf8');
+try {
+  fs.writeFileSync('/tmp/filemaker-index-server-run.log', 'Running FileMakerMCP server', 'utf8');
+} catch (e) {
+  // Ignore log write errors
+}
 
 server.run().catch((err) => {
   // DEBUG: Log any errors
-  fs.writeFileSync('./filemaker-index-error.log', `Server error: ${err.message}`, 'utf8');
+  try {
+    fs.writeFileSync('/tmp/filemaker-index-error.log', `Server error: ${err.message}`, 'utf8');
+  } catch (e) {
+    // Ignore log write errors
+  }
   console.error('FileMaker MCP server error:', err);
   process.exit(1);
 }); 
