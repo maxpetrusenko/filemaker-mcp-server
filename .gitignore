@@ -1,6 +1,7 @@
 .env
 .npmrc
 test-files/
+node_modules/
 
 # Package archives (keep only latest)
 *.tgz
