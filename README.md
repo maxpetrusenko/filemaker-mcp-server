@@ -1,593 +1,432 @@
-# FileMaker MCP Server
+# FileMaker MCP Server v2.5.0
 
-A Model Context Protocol (MCP) server for FileMaker integration, enabling AI assistants to interact with FileMaker databases through natural language commands.
+A comprehensive Model Context Protocol (MCP) server for FileMaker Data API integration, providing intelligent tools for database discovery, analysis, and management.
 
-## Features
+## 🚀 Features
 
-### Core FileMaker Operations
-- **CRUD Operations**: Find, create, update, and delete records
-- **Script Execution**: Run FileMaker scripts with parameters
-- **Layout Metadata**: Retrieve layout information and field definitions
-- **Authentication**: Secure token-based authentication with FileMaker Server
+### **Phase 1: Core Discovery Tools**
+- **`fm_list_layouts`** - List all layouts in the database
+- **`fm_list_scripts`** - List all scripts in the database  
+- **`fm_get_record_count`** - Get total record count for any layout
+- **`fm_list_value_lists`** - List value lists (requires script approach)
 
-### 🆕 Git-based Version Control (v2.0)
-- **Layout Export**: Export FileMaker layouts to XML/JSON and save to Git
-- **Script Export**: Export FileMaker scripts to XML/JSON and save to Git
-- **Git Operations**: Commit, push, pull, status, and diff operations
-- **Bidirectional Sync**: Seamless integration between FileMaker and Git repositories
-- **Collaborative Development**: Enable team collaboration with version control
+### **Phase 2: Advanced Analysis Tools**
+- **`fm_analyze_portal_data`** - Analyze portal fields and relationships for performance insights
+- **`fm_get_field_metadata`** - Get detailed metadata for all fields in a layout
+- **`fm_search_across_fields`** - Search for specific text across multiple fields
+- **`fm_analyze_performance`** - Analyze database performance and identify bottlenecks
 
-### 🆕 Intelligent Debugging (v2.1)
-- **Script Analysis**: Detect common debugging issues and performance bottlenecks
-- **Error Resolution**: AI-powered error analysis with fix suggestions
-- **Script Optimization**: Performance and readability optimization recommendations
-- **Layout Validation**: Validate layout structure for common issues
-- **Complexity Analysis**: Assess script complexity and risk levels
-- **Performance Analysis**: Identify performance bottlenecks and optimization opportunities
+### **Phase 3: Global Search & Advanced Discovery**
+- **`fm_global_search_fields`** - Search for fields across all layouts in the database
+- **`fm_global_search_data`** - Search for data across multiple layouts simultaneously
+- **`fm_export_ddr`** - Export Database Design Report for comprehensive analysis
+- **`fm_analyze_relationships`** - Analyze relationships between tables and identify foreign keys
 
-### 🆕 API Enhancement & Scalability (v2.2)
-- **Batch Operations**: Process multiple records in batches to overcome 50-record limits
-- **Paginated Queries**: Retrieve large datasets efficiently with pagination
-- **Bulk Import/Export**: Import and export large datasets with field mapping
-- **Data Synchronization**: Sync data between layouts with conflict resolution
-- **Performance Monitoring**: Monitor API performance and identify bottlenecks
-- **Cache Management**: In-memory caching for improved response times
-- **Rate Limit Handling**: Intelligent rate limiting to prevent API throttling
+### **Core Data Operations**
+- **`fm_find_records`** - Find records using FileMaker Data API find syntax
+- **`fm_create_record`** - Create new records
+- **`fm_update_record`** - Update existing records
+- **`fm_delete_record`** - Delete records
+- **`fm_execute_script`** - Execute FileMaker scripts
+- **`fm_get_layout_metadata`** - Get layout structure and field information
 
-## Installation
+### **Advanced Features**
+- **Git Integration** - Version control for FileMaker components
+- **Intelligent Debugging** - Script analysis and optimization
+- **API Enhancements** - Batch operations, caching, performance monitoring
+- **Error Handling** - Comprehensive error resolution and prevention
 
+## 📦 Installation
+
+### For Claude Desktop
+1. Install the package:
 ```bash
-npm install -g filemaker-mcp-server
+npm install -g filemaker-mcp-server-v2@2.5.0
 ```
 
-Or run directly with npx:
-
-```bash
-npx filemaker-mcp-server
-```
-
-## Configuration
-
-### Environment Variables
-```bash
-export FILEMAKER_HOST="https://your-filemaker-server.com"
-export FILEMAKER_DATABASE="YourDatabase"
-export FILEMAKER_USERNAME="your-username"
-export FILEMAKER_PASSWORD="your-password"
-export FILEMAKER_GIT_REPO_PATH="/path/to/your/git/repo"  # Optional for Git integration
-```
-
-### Command Line Arguments
-```bash
-filemaker-mcp-server \
-  --host "https://your-filemaker-server.com" \
-  --database "YourDatabase" \
-  --username "your-username" \
-  --password "your-password" \
-  --git-repo-path "/path/to/your/git/repo"  # Optional for Git integration
-```
-
-## Usage
-
-### Basic FileMaker Operations
-
-#### Find Records
-```json
-{
-  "name": "fm_find_records",
-  "arguments": {
-    "layout": "Contacts",
-    "query": { "Name": "John Doe" },
-    "limit": 10,
-    "offset": 1
-  }
-}
-```
-
-#### Create Record
-```json
-{
-  "name": "fm_create_record",
-  "arguments": {
-    "layout": "Contacts",
-    "fieldData": {
-      "Name": "Jane Smith",
-      "Email": "jane@example.com",
-      "Phone": "555-1234"
-    }
-  }
-}
-```
-
-#### Execute Script
-```json
-{
-  "name": "fm_execute_script",
-  "arguments": {
-    "script": "SendWelcomeEmail",
-    "parameter": "user@example.com"
-  }
-}
-```
-
-### 🆕 Git Integration Operations
-
-#### Export Layout to Git
-```json
-{
-  "name": "fm_git_export_layout",
-  "arguments": {
-    "layout": "Contacts",
-    "format": "xml",
-    "gitMessage": "Export Contacts layout for version control"
-  }
-}
-```
-
-#### Export Script to Git
-```json
-{
-  "name": "fm_git_export_script",
-  "arguments": {
-    "script": "SendWelcomeEmail",
-    "format": "json",
-    "gitMessage": "Export SendWelcomeEmail script"
-  }
-}
-```
-
-#### Commit Changes
-```json
-{
-  "name": "fm_git_commit_changes",
-  "arguments": {
-    "message": "Update FileMaker components",
-    "includeAll": true
-  }
-}
-```
-
-#### Push to Remote Repository
-```json
-{
-  "name": "fm_git_push_changes",
-  "arguments": {
-    "remote": "origin",
-    "branch": "main"
-  }
-}
-```
-
-#### Pull Latest Changes
-```json
-{
-  "name": "fm_git_pull_changes",
-  "arguments": {
-    "remote": "origin",
-    "branch": "main"
-  }
-}
-```
-
-#### Check Git Status
-```json
-{
-  "name": "fm_git_status",
-  "arguments": {
-    "showStaged": true,
-    "showUnstaged": true
-  }
-}
-```
-
-#### View Git Diff
-```json
-{
-  "name": "fm_git_diff",
-  "arguments": {
-    "file": "Contacts.xml",
-    "staged": false
-  }
-}
-```
-
-### 🆕 API Enhancement & Scalability Operations
-
-#### Batch Operations
-```json
-{
-  "name": "fm_api_batch_operations",
-  "arguments": {
-    "operation": "create",
-    "records": [
-      { "layout": "Contacts", "fieldData": { "Name": "John Doe", "Email": "john@example.com" } },
-      { "layout": "Contacts", "fieldData": { "Name": "Jane Smith", "Email": "jane@example.com" } }
-    ],
-    "batchSize": 50
-  }
-}
-```
-
-#### Paginated Query
-```json
-{
-  "name": "fm_api_paginated_query",
-  "arguments": {
-    "query": { "layout": "Contacts", "filters": {} },
-    "pageSize": 100,
-    "maxPages": 10,
-    "sortField": "_modificationTimestamp",
-    "sortOrder": "desc"
-  }
-}
-```
-
-#### Bulk Import
-```json
-{
-  "name": "fm_api_bulk_import",
-  "arguments": {
-    "data": [
-      { "Name": "John Doe", "Email": "john@example.com" },
-      { "Name": "Jane Smith", "Email": "jane@example.com" }
-    ],
-    "layout": "Contacts",
-    "importMode": "create",
-    "fieldMapping": { "Name": "FullName", "Email": "EmailAddress" },
-    "conflictResolution": "skip"
-  }
-}
-```
-
-#### Bulk Export
-```json
-{
-  "name": "fm_api_bulk_export",
-  "arguments": {
-    "layout": "Contacts",
-    "format": "json",
-    "fields": ["Name", "Email", "Phone"],
-    "includeMetadata": true
-  }
-}
-```
-
-#### Data Synchronization
-```json
-{
-  "name": "fm_api_data_sync",
-  "arguments": {
-    "sourceLayout": "Contacts",
-    "targetLayout": "ContactsBackup",
-    "keyField": "Email",
-    "syncMode": "incremental",
-    "lastSyncTime": "2024-01-01T00:00:00Z"
-  }
-}
-```
-
-#### Performance Monitoring
-```json
-{
-  "name": "fm_api_performance_monitor",
-  "arguments": {
-    "operation": "query_performance",
-    "duration": 5000
-  }
-}
-```
-
-#### Cache Management
-```json
-{
-  "name": "fm_api_cache_management",
-  "arguments": {
-    "action": "set",
-    "key": "contacts_layout_metadata",
-    "data": { "fields": ["Name", "Email", "Phone"] },
-    "ttl": 3600
-  }
-}
-```
-
-#### Rate Limit Handling
-```json
-{
-  "name": "fm_api_rate_limit_handler",
-  "arguments": {
-    "operation": "find_records",
-    "requests": 10,
-    "timeWindow": 60000
-  }
-}
-```
-
-### 🆕 Intelligent Debugging Operations
-
-#### Analyze Script for Debugging Issues
-```json
-{
-  "name": "fm_debug_analyze_script",
-  "arguments": {
-    "scriptName": "SendWelcomeEmail",
-    "scriptContent": "Set Next Step\nGo to Field [\"Email\"]\nSet Field [\"Email\"; \"test@example.com\"]"
-  }
-}
-```
-
-#### Get Error Fix Suggestions
-```json
-{
-  "name": "fm_debug_suggest_fixes",
-  "arguments": {
-    "scriptName": "SendWelcomeEmail",
-    "errorMessage": "Field not found: Email",
-    "scriptContent": "Set Field [\"Email\"; \"test@example.com\"]"
-  }
-}
-```
-
-#### Optimize Script for Performance
-```json
-{
-  "name": "fm_debug_optimize_script",
-  "arguments": {
-    "scriptName": "ProcessRecords",
-    "scriptContent": "Go to Field [\"Name\"]\nSet Field [\"Name\"; \"John\"]",
-    "optimizationType": "performance"
-  }
-}
-```
-
-#### Validate Layout Structure
-```json
-{
-  "name": "fm_debug_validate_layout",
-  "arguments": {
-    "layoutName": "Contacts",
-    "layoutData": {
-      "objects": [/* layout objects array */]
-    }
-  }
-}
-```
-
-#### Resolve FileMaker Error Codes
-```json
-{
-  "name": "fm_debug_error_resolution",
-  "arguments": {
-    "errorCode": "100",
-    "scriptName": "FindRecord",
-    "errorContext": {
-      "layout": "Contacts",
-      "operation": "find"
-    }
-  }
-}
-```
-
-#### Analyze Script Performance
-```json
-{
-  "name": "fm_debug_performance_analysis",
-  "arguments": {
-    "scriptName": "ProcessLargeDataset",
-    "scriptContent": "Loop\n  Go to Field [\"Field1\"]\n  Set Field [\"Field1\"; Get(RecordNumber)]\nEnd Loop"
-  }
-}
-```
-
-#### Analyze Script Complexity
-```json
-{
-  "name": "fm_debug_script_complexity",
-  "arguments": {
-    "scriptName": "ComplexWorkflow",
-    "scriptContent": "If [condition1]\n  If [condition2]\n    Loop\n      Perform Script [\"SubScript\"]\n    End Loop\n  End If\nEnd If"
-  }
-}
-```
-
-## Claude Integration
-
-Add this to your Claude configuration:
-
+2. Add to your MCP configuration:
 ```json
 {
   "mcpServers": {
     "filemaker": {
       "command": "npx",
-      "args": ["filemaker-mcp-server"],
+      "args": ["filemaker-mcp-server-v2@2.5.0"],
       "env": {
         "FILEMAKER_HOST": "https://your-filemaker-server.com",
-        "FILEMAKER_DATABASE": "YourDatabase",
+        "FILEMAKER_DATABASE": "your-database-name",
         "FILEMAKER_USERNAME": "your-username",
-        "FILEMAKER_PASSWORD": "your-password",
-        "FILEMAKER_GIT_REPO_PATH": "/path/to/your/git/repo"
+        "FILEMAKER_PASSWORD": "your-password"
       }
     }
   }
 }
 ```
 
-## Docker Support
-
-### Build and Run
+### For Development
 ```bash
-# Build the image
-docker build -t filemaker-mcp-server .
-
-# Run with environment variables
-docker run -e FILEMAKER_HOST="https://your-server.com" \
-           -e FILEMAKER_DATABASE="YourDatabase" \
-           -e FILEMAKER_USERNAME="your-username" \
-           -e FILEMAKER_PASSWORD="your-password" \
-           -e FILEMAKER_GIT_REPO_PATH="/path/to/repo" \
-           filemaker-mcp-server
-```
-
-## Development
-
-### Setup
-```bash
-git clone <repository-url>
+git clone <repository>
 cd filemaker-mcp-server
 npm install
-```
-
-### Build
-```bash
 npm run build
 ```
 
-### Test
+## 🛠️ Tool Reference
+
+### Discovery Tools
+
+#### `fm_list_layouts`
+Lists all layouts in the FileMaker database.
+```json
+{
+  "name": "fm_list_layouts",
+  "description": "List all layouts in the FileMaker database",
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
+```
+
+#### `fm_list_scripts`
+Lists all scripts in the FileMaker database.
+```json
+{
+  "name": "fm_list_scripts", 
+  "description": "List all scripts in the FileMaker database",
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
+```
+
+#### `fm_get_record_count`
+Gets the total number of records in a specified layout.
+```json
+{
+  "name": "fm_get_record_count",
+  "description": "Get the total number of records in a specified layout",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+### Analysis Tools
+
+#### `fm_analyze_portal_data`
+Analyzes portal fields and their relationships for performance insights.
+```json
+{
+  "name": "fm_analyze_portal_data",
+  "description": "Analyze portal fields and their relationships for performance insights",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name to analyze" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+#### `fm_get_field_metadata`
+Gets detailed metadata for all fields in a layout.
+```json
+{
+  "name": "fm_get_field_metadata",
+  "description": "Get detailed metadata for all fields in a layout",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+#### `fm_search_across_fields`
+Searches for specific text across multiple fields in a layout.
+```json
+{
+  "name": "fm_search_across_fields",
+  "description": "Search for specific text across multiple fields in a layout",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" },
+      "searchText": { "type": "string", "description": "Text to search for" },
+      "fields": { "type": "array", "items": { "type": "string" }, "description": "Fields to search in" }
+    },
+    "required": ["layout", "searchText"]
+  }
+}
+```
+
+#### `fm_analyze_performance`
+Analyzes database performance and identifies potential bottlenecks.
+```json
+{
+  "name": "fm_analyze_performance",
+  "description": "Analyze database performance and identify potential bottlenecks",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout to analyze" },
+      "operation": { "type": "string", "enum": ["find", "sort", "portal"], "description": "Operation type to analyze" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+### Global Search & Discovery Tools
+
+#### `fm_global_search_fields`
+Search for fields across all layouts in the database.
+```json
+{
+  "name": "fm_global_search_fields",
+  "description": "Search for fields across all layouts in the database",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "searchText": { "type": "string", "description": "Text to search for in field names" },
+      "fieldType": { "type": "string", "enum": ["text", "number", "date", "calculation", "summary", "portal", "all"], "description": "Filter by field type" }
+    },
+    "required": ["searchText"]
+  }
+}
+```
+
+#### `fm_global_search_data`
+Search for data across multiple layouts simultaneously.
+```json
+{
+  "name": "fm_global_search_data",
+  "description": "Search for data across multiple layouts simultaneously",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "searchText": { "type": "string", "description": "Text to search for in data" },
+      "layouts": { "type": "array", "items": { "type": "string" }, "description": "Specific layouts to search (empty for all)" },
+      "limit": { "type": "number", "description": "Maximum results per layout" }
+    },
+    "required": ["searchText"]
+  }
+}
+```
+
+#### `fm_export_ddr`
+Export Database Design Report for comprehensive analysis.
+```json
+{
+  "name": "fm_export_ddr",
+  "description": "Export Database Design Report for comprehensive analysis",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "format": { "type": "string", "enum": ["json", "xml", "html"], "description": "Export format" },
+      "includeScripts": { "type": "boolean", "description": "Include script information" },
+      "includeLayouts": { "type": "boolean", "description": "Include layout information" }
+    },
+    "required": []
+  }
+}
+```
+
+#### `fm_analyze_relationships`
+Analyze relationships between tables and identify foreign keys.
+```json
+{
+  "name": "fm_analyze_relationships",
+  "description": "Analyze relationships between tables and identify foreign keys",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout to analyze relationships for" },
+      "depth": { "type": "number", "description": "Relationship depth to analyze (1-3)" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+## 🔍 SQL vs FileMaker Data API
+
+**FileMaker Data API does NOT support direct SQL execution**, but provides equivalent functionality:
+
+### SQL to FileMaker Data API Mapping
+
+| SQL | FileMaker Data API |
+|-----|-------------------|
+| `SELECT * FROM table` | `GET /layouts/{layout}/records` |
+| `WHERE field = value` | `POST /layouts/{layout}/_find` with query |
+| `ORDER BY field DESC` | `sort: [{fieldName: "field", sortOrder: "descend"}]` |
+| `LIMIT 10 OFFSET 20` | `limit: 10, offset: 20` |
+| `SELECT field1, field2` | `fields: ["field1", "field2"]` |
+
+### Example Conversion
+```sql
+-- SQL Query
+SELECT * FROM Price 
+WHERE currentPrice > 1000000 
+ORDER BY currentPrice DESC 
+LIMIT 5;
+```
+
+```javascript
+// FileMaker Data API equivalent
+{
+  query: [{ currentPrice: ">1000000" }],
+  sort: [{ fieldName: "currentPrice", sortOrder: "descend" }],
+  limit: 5
+}
+```
+
+## 🐳 Docker Support
+
+### Dockerfile
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Docker Compose
+```yaml
+version: '3.8'
+services:
+  filemaker-mcp:
+    build: .
+    environment:
+      - FILEMAKER_HOST=https://your-filemaker-server.com
+      - FILEMAKER_DATABASE=your-database-name
+      - FILEMAKER_USERNAME=your-username
+      - FILEMAKER_PASSWORD=your-password
+    ports:
+      - "3000:3000"
+```
+
+## 🔧 Development
+
+### Prerequisites
+- Node.js 18+
+- TypeScript
+- FileMaker Server with Data API enabled
+
+### Setup
 ```bash
+npm install
+npm run build
 npm test
 ```
 
-### Run Locally
+### Testing
 ```bash
-npm start
+# Run all tests
+npm test
+
+# Run specific test
+npm test -- test-files/test-phase1-tools.js
+
+# Run E2E tests
+npm run test:e2e
 ```
 
-## Git Integration Workflow
+## 📊 Performance Optimization
 
-### 1. Initial Setup
-```bash
-# Initialize Git repository for FileMaker components
-mkdir filemaker-components
-cd filemaker-components
-git init
-git remote add origin https://github.com/your-org/filemaker-components.git
+### Best Practices
+1. **Use Find Queries** instead of loading all records
+2. **Implement Pagination** for large datasets
+3. **Cache Frequently Used Data** using the built-in cache system
+4. **Monitor Performance** using `fm_analyze_performance`
+5. **Optimize Portal Loading** using `fm_analyze_portal_data`
+
+### Performance Monitoring
+```javascript
+// Analyze find performance
+await fm_analyze_performance({
+  layout: "@Price",
+  operation: "find"
+});
+
+// Analyze portal performance  
+await fm_analyze_performance({
+  layout: "@Unit",
+  operation: "portal"
+});
 ```
 
-### 2. Export and Version Control
-```bash
-# Export layouts and scripts
-fm_git_export_layout --layout "Contacts" --format "xml"
-fm_git_export_script --script "SendWelcomeEmail" --format "json"
+## 🔒 Security
 
-# Commit changes
-fm_git_commit_changes --message "Initial export of FileMaker components"
+### Authentication
+- Uses FileMaker Data API token-based authentication
+- Tokens are automatically refreshed
+- Supports both username/password and OAuth
 
-# Push to remote
-fm_git_push_changes --remote "origin" --branch "main"
-```
+### Error Handling
+- Comprehensive error messages
+- Automatic retry mechanisms
+- Rate limiting protection
 
-### 3. Collaborative Development
-- Team members can pull latest changes: `fm_git_pull_changes`
-- Review changes with: `fm_git_status` and `fm_git_diff`
-- Export their modifications and commit: `fm_git_export_layout` + `fm_git_commit_changes`
+## 📈 Roadmap
 
-## Intelligent Debugging Workflow
+### Phase 3: Advanced Management (Planned)
+- **`fm_export_ddr`** - Export Database Design Report
+- **`fm_manage_users`** - User and permission management
+- **`fm_backup_restore`** - Database backup and restore operations
+- **`fm_sync_data`** - Data synchronization between databases
 
-### 1. Script Analysis
-```bash
-# Analyze a script for common issues
-fm_debug_analyze_script --scriptName "SendWelcomeEmail" --scriptContent "Set Next Step\nGo to Field [\"Email\"]"
-```
+### Phase 4: AI Integration (Planned)
+- **`fm_ai_analyze`** - AI-powered data analysis
+- **`fm_ai_optimize`** - AI-driven performance optimization
+- **`fm_ai_generate`** - AI-generated reports and insights
 
-### 2. Error Resolution
-```bash
-# Get fix suggestions for errors
-fm_debug_suggest_fixes --scriptName "SendWelcomeEmail" --errorMessage "Field not found: Email"
-```
-
-### 3. Performance Optimization
-```bash
-# Optimize script for better performance
-fm_debug_optimize_script --scriptName "ProcessRecords" --optimizationType "performance"
-```
-
-### 4. Complexity Assessment
-```bash
-# Analyze script complexity and risk
-fm_debug_script_complexity --scriptName "ComplexWorkflow"
-```
-
-### 5. Layout Validation
-```bash
-# Validate layout structure
-fm_debug_validate_layout --layoutName "Contacts" --layoutData "{...}"
-```
-
-## Security Considerations
-
-- Store sensitive credentials in environment variables
-- Use HTTPS for FileMaker Server connections
-- Implement proper access controls for Git repositories
-- Consider using Git LFS for large FileMaker exports
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Authentication Failed**
-   - Verify FileMaker Server credentials
-   - Check network connectivity
-   - Ensure FileMaker Data API is enabled
-
-2. **Git Operations Fail**
-   - Verify Git repository path exists
-   - Check Git credentials and permissions
-   - Ensure Git is installed and configured
-
-3. **Export Failures**
-   - Verify layout/script names exist in FileMaker
-   - Check file system permissions for Git repository
-   - Ensure sufficient disk space
-
-## Contributing
+## 🤝 Contributing
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests for new functionality
+4. Add tests
 5. Submit a pull request
 
-## License
+## 📄 License
 
-MIT License - see LICENSE file for details.
+MIT License - see LICENSE file for details
 
-## Version History
+## 🆘 Support
 
-### v2.2.0
-- 🆕 Added API Enhancement & Scalability features
-- 🆕 Batch operations to overcome 50-record API limitations
-- 🆕 Paginated queries for large dataset retrieval
-- 🆕 Bulk import/export with field mapping and conflict resolution
-- 🆕 Data synchronization between layouts
-- 🆕 Performance monitoring and bottleneck identification
-- 🆕 In-memory cache management for improved response times
-- 🆕 Intelligent rate limiting to prevent API throttling
-- 🔧 Enhanced error handling and batch processing
-- 📚 Updated documentation with comprehensive API examples
+- **Documentation**: [README.md](README.md)
+- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 
-### v2.1.0
-- 🆕 Added Intelligent Debugging features
-- 🆕 Script analysis for debugging issues and performance bottlenecks
-- 🆕 AI-powered error resolution with fix suggestions
-- 🆕 Script optimization for performance and readability
-- 🆕 Layout validation for common issues
-- 🆕 Complexity analysis and risk assessment
-- 🆕 Performance analysis with optimization recommendations
-- 🔧 Enhanced error handling and validation
-- 📚 Comprehensive debugging documentation and examples
+## 🔄 Changelog
 
-### v2.0.0
-- 🆕 Added Git-based version control integration
-- 🆕 Export FileMaker layouts and scripts to Git
-- 🆕 Git operations: commit, push, pull, status, diff
-- 🆕 Bidirectional sync between FileMaker and Git
-- 🔧 Improved error handling and authentication
-- 📚 Enhanced documentation and examples
+### v2.4.0 (Current)
+- ✅ Added Phase 2 Advanced Analysis Tools
+- ✅ Enhanced performance monitoring
+- ✅ Improved error handling
+- ✅ Updated documentation
 
-### v1.0.0
-- Initial release with basic FileMaker CRUD operations
-- Script execution support
-- Layout metadata retrieval
-- Docker support
-- Claude integration examples
+### v2.3.0
+- ✅ Added Phase 1 Core Discovery Tools
+- ✅ Fixed script execution endpoint
+- ✅ Improved authentication handling
 
-file maker mcp cursor claude code cline gemini cli claude desktop github
+### v2.2.x
+- ✅ Core MCP server functionality
+- ✅ Basic FileMaker Data API integration
+- ✅ Git integration features

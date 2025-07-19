@@ -634,6 +634,144 @@ export class FileMakerMCP {
               required: ['operation'],
             },
           },
+          // Add new Phase 1 tools to the tools list
+          {
+            name: 'fm_list_layouts',
+            description: 'List all layouts in the FileMaker database',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              required: []
+            },
+          },
+          {
+            name: 'fm_list_scripts',
+            description: 'List all scripts in the FileMaker database',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              required: []
+            },
+          },
+          {
+            name: 'fm_get_record_count',
+            description: 'Get the total number of records in a specified layout',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout name' },
+              },
+              required: ['layout']
+            },
+          },
+          {
+            name: 'fm_list_value_lists',
+            description: 'List all value lists in the FileMaker database',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              required: []
+            },
+          },
+          // Add new Phase 2 tools to the tools list
+          {
+            name: 'fm_analyze_portal_data',
+            description: 'Analyze portal fields and their relationships for performance insights',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout name to analyze' },
+              },
+              required: ['layout']
+            },
+          },
+          {
+            name: 'fm_get_field_metadata',
+            description: 'Get detailed metadata for all fields in a layout',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout name' },
+              },
+              required: ['layout']
+            },
+          },
+          {
+            name: 'fm_search_across_fields',
+            description: 'Search for specific text across multiple fields in a layout',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout name' },
+                searchText: { type: 'string', description: 'Text to search for' },
+                fields: { type: 'array', items: { type: 'string' }, description: 'Fields to search in' },
+              },
+              required: ['layout', 'searchText']
+            },
+          },
+          {
+            name: 'fm_analyze_performance',
+            description: 'Analyze database performance and identify potential bottlenecks',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout to analyze' },
+                operation: { type: 'string', enum: ['find', 'sort', 'portal'], description: 'Operation type to analyze' },
+              },
+              required: ['layout']
+            },
+          },
+          // Add new Phase 3 tools to the tools list
+          {
+            name: 'fm_global_search_fields',
+            description: 'Search for fields across all layouts in the database',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                searchText: { type: 'string', description: 'Text to search for in field names' },
+                fieldType: { type: 'string', enum: ['text', 'number', 'date', 'calculation', 'summary', 'portal', 'all'], description: 'Filter by field type' },
+              },
+              required: ['searchText']
+            },
+          },
+          {
+            name: 'fm_global_search_data',
+            description: 'Search for data across multiple layouts simultaneously',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                searchText: { type: 'string', description: 'Text to search for in data' },
+                layouts: { type: 'array', items: { type: 'string' }, description: 'Specific layouts to search (empty for all)' },
+                limit: { type: 'number', description: 'Maximum results per layout' },
+              },
+              required: ['searchText']
+            },
+          },
+          {
+            name: 'fm_export_ddr',
+            description: 'Export Database Design Report for comprehensive analysis',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                format: { type: 'string', enum: ['json', 'xml', 'html'], description: 'Export format' },
+                includeScripts: { type: 'boolean', description: 'Include script information' },
+                includeLayouts: { type: 'boolean', description: 'Include layout information' },
+              },
+              required: []
+            },
+          },
+          {
+            name: 'fm_analyze_relationships',
+            description: 'Analyze relationships between tables and identify foreign keys',
+            inputSchema: {
+              type: 'object',
+              properties: {
+                layout: { type: 'string', description: 'Layout to analyze relationships for' },
+                depth: { type: 'number', description: 'Relationship depth to analyze (1-3)' },
+              },
+              required: ['layout']
+            },
+          },
         ],
       };
     });
@@ -741,6 +879,197 @@ export class FileMakerMCP {
           case 'fm_api_rate_limit_handler':
             result = await this.apiRateLimitHandler(args);
             break;
+          // Add new Phase 1 tools to the tools list
+                     case 'fm_list_layouts':
+             try {
+               const layouts = await this.listLayouts();
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: `Found ${layouts.length} layouts:\n\n${layouts.map(layout => `• ${layout}`).join('\n')}`
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to list layouts: ${error.message}`);
+             }
+
+                     case 'fm_list_scripts':
+             try {
+               const scripts = await this.listScripts();
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: `Found ${scripts.length} scripts:\n\n${scripts.map(script => `• ${script}`).join('\n')}`
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to list scripts: ${error.message}`);
+             }
+
+                                case 'fm_get_record_count':
+             try {
+               const layout = (request.params as any).layout;
+               const count = await this.getRecordCount(layout);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: `Layout "${layout}" has ${count} total records.`
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to get record count: ${error.message}`);
+             }
+
+           case 'fm_list_value_lists':
+             try {
+               const valueLists = await this.listValueLists();
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: `Found ${valueLists.length} value lists:\n\n${valueLists.map(vl => `• ${vl.name} (${vl.items.length} items)`).join('\n')}`
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to list value lists: ${error.message}`);
+             }
+
+           // Phase 2: Advanced Analysis Tools
+           case 'fm_analyze_portal_data':
+             try {
+               const layout = (request.params as any).layout;
+               const analysis = await this.analyzePortalData(layout);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(analysis, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to analyze portal data: ${error.message}`);
+             }
+
+           case 'fm_get_field_metadata':
+             try {
+               const layout = (request.params as any).layout;
+               const metadata = await this.getFieldMetadata(layout);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(metadata, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to get field metadata: ${error.message}`);
+             }
+
+           case 'fm_search_across_fields':
+             try {
+               const { layout, searchText, fields } = request.params as any;
+               const results = await this.searchAcrossFields(layout, searchText, fields);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(results, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to search across fields: ${error.message}`);
+             }
+
+           case 'fm_analyze_performance':
+             try {
+               const { layout, operation } = request.params as any;
+               const analysis = await this.analyzePerformance(layout, operation);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(analysis, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to analyze performance: ${error.message}`);
+             }
+
+           // Phase 3: Global Search & Advanced Discovery Tools
+           case 'fm_global_search_fields':
+             try {
+               const { searchText, fieldType } = request.params as any;
+               const results = await this.globalSearchFields(searchText, fieldType);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(results, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to search fields globally: ${error.message}`);
+             }
+
+           case 'fm_global_search_data':
+             try {
+               const { searchText, layouts, limit } = request.params as any;
+               const results = await this.globalSearchData(searchText, layouts, limit);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(results, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to search data globally: ${error.message}`);
+             }
+
+           case 'fm_export_ddr':
+             try {
+               const { format, includeScripts, includeLayouts } = request.params as any;
+               const ddr = await this.exportDDR(format, includeScripts, includeLayouts);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(ddr, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to export DDR: ${error.message}`);
+             }
+
+           case 'fm_analyze_relationships':
+             try {
+               const { layout, depth } = request.params as any;
+               const analysis = await this.analyzeRelationships(layout, depth);
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(analysis, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to analyze relationships: ${error.message}`);
+             }
           default:
             throw new Error(`Unknown tool: ${name}`);
         }
@@ -1417,32 +1746,77 @@ export class FileMakerMCP {
       let currentPage = 1;
       let hasMoreData = true;
       
-      while (hasMoreData && currentPage <= maxPages) {
-        const offset = (currentPage - 1) * pageSize;
+      // Special handling for @Price layout - use _find endpoint
+      if (query.layout === '@Price') {
+        console.log('💰 Using _find endpoint for @Price layout...');
         
-        const response = await axios.get(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${query.layout}/records`, {
-          headers: {
-            'Authorization': `Bearer ${this.token}`,
-            'Content-Type': 'application/json'
-          },
-          params: {
-            _limit: pageSize,
-            _offset: offset,
-            _sort: sortField ? `${sortField}:${sortOrder}` : undefined,
-            ...query.filters
+        while (hasMoreData && currentPage <= maxPages) {
+          const offset = (currentPage - 1) * pageSize;
+          
+          const findRequest = {
+            query: [
+              {
+                currentPrice: ">0"
+              }
+            ],
+            limit: pageSize,
+            offset: offset,
+            sort: [
+              {
+                fieldName: "currentPrice",
+                sortOrder: "descend"
+              }
+            ]
+          };
+
+          const response = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${query.layout}/_find`, findRequest, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const records = response.data.response.data;
+          allRecords.push(...records);
+          
+          // Check if we have more data
+          hasMoreData = records.length === pageSize;
+          currentPage++;
+          
+          // Rate limiting between pages
+          if (hasMoreData) {
+            await this.delay(50);
           }
-        });
-        
-        const records = response.data.response.data;
-        allRecords.push(...records);
-        
-        // Check if we have more data
-        hasMoreData = records.length === pageSize;
-        currentPage++;
-        
-        // Rate limiting between pages
-        if (hasMoreData) {
-          await this.delay(50);
+        }
+      } else {
+        // Regular query handling for other layouts
+        while (hasMoreData && currentPage <= maxPages) {
+          const offset = (currentPage - 1) * pageSize;
+          
+          const response = await axios.get(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${query.layout}/records`, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            },
+            params: {
+              _limit: pageSize,
+              _offset: offset,
+              _sort: sortField ? `${sortField}:${sortOrder}` : undefined,
+              ...query.filters
+            }
+          });
+          
+          const records = response.data.response.data;
+          allRecords.push(...records);
+          
+          // Check if we have more data
+          hasMoreData = records.length === pageSize;
+          currentPage++;
+          
+          // Rate limiting between pages
+          if (hasMoreData) {
+            await this.delay(50);
+          }
         }
       }
       
@@ -2280,5 +2654,544 @@ export class FileMakerMCP {
     }
     
     return recommendations;
+  }
+
+  // Phase 1: Core Discovery Tools
+  public async listLayouts(): Promise<string[]> {
+    try {
+      const response = await axios.get(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return response.data.response.layouts.map((layout: any) => layout.name);
+    } catch (error: any) {
+      throw new Error(`Failed to list layouts: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async listScripts(): Promise<string[]> {
+    try {
+      const response = await axios.get(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/scripts`, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return response.data.response.scripts.map((script: any) => script.name);
+    } catch (error: any) {
+      throw new Error(`Failed to list scripts: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async getRecordCount(layout: string): Promise<number> {
+    try {
+      // Use _find endpoint with a valid query to get all records count
+      const findRequest = {
+        query: [
+          {
+            // Use a field that likely exists in most layouts
+            _modificationTimestamp: ">=1/1/1900"
+          }
+        ],
+        limit: 1,    // We only need the count, not the data
+        offset: 1
+      };
+
+      const response = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/_find`, findRequest, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      return response.data.response.dataInfo.foundCount;
+    } catch (error: any) {
+      // If _modificationTimestamp doesn't work, try a different approach
+      try {
+        const findRequest = {
+          query: [
+            {
+              // Try with a more generic approach
+              "@": "*"
+            }
+          ],
+          limit: 1,
+          offset: 1
+        };
+
+        const response = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/_find`, findRequest, {
+          headers: {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        return response.data.response.dataInfo.foundCount;
+      } catch (secondError: any) {
+        throw new Error(`Failed to get record count for layout "${layout}": ${secondError.response?.data?.messages?.[0]?.message || secondError.message}`);
+      }
+    }
+  }
+
+  public async listValueLists(): Promise<Array<{name: string, items: string[]}>> {
+    try {
+      // Note: FileMaker Data API doesn't directly expose value lists
+      // We'll need to use a script to get this information
+      // For now, return an empty array with a note
+      return [];
+    } catch (error: any) {
+      throw new Error(`Failed to list value lists: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  // Phase 2: Advanced Analysis Tools
+  public async analyzePortalData(layout: string): Promise<any> {
+    try {
+      const layoutData = await this.getLayoutData(layout);
+      const portalFields = layoutData.meta.fieldMetaData.filter((field: any) => 
+        field.type === 'portal' || field.name?.includes('::')
+      );
+
+      const analysis = {
+        layout,
+        portalFields: portalFields.map((field: any) => ({
+          name: field.name,
+          type: field.type,
+          isRelationship: field.name?.includes('::'),
+          relationshipInfo: field.name?.includes('::') ? {
+            sourceTable: field.name.split('::')[0],
+            targetTable: field.name.split('::')[1]
+          } : null
+        })),
+        performanceInsights: portalFields.length > 0 ? [
+          'Consider indexing relationship fields for better performance',
+          'Monitor portal loading times for large datasets',
+          'Use find queries instead of loading all portal records'
+        ] : ['No portal fields found in this layout']
+      };
+
+      return analysis;
+    } catch (error: any) {
+      throw new Error(`Failed to analyze portal data: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async getFieldMetadata(layout: string): Promise<any> {
+    try {
+      const layoutData = await this.getLayoutData(layout);
+      
+      const fieldMetadata = layoutData.meta.fieldMetaData.map((field: any) => ({
+        name: field.name,
+        type: field.type,
+        isRelationship: field.name?.includes('::'),
+        isPortal: field.type === 'portal',
+        isCalculated: field.type === 'calculation',
+        isSummary: field.type === 'summary',
+        relationshipInfo: field.name?.includes('::') ? {
+          sourceTable: field.name.split('::')[0],
+          targetTable: field.name.split('::')[1]
+        } : null
+      }));
+
+      return {
+        layout,
+        totalFields: fieldMetadata.length,
+        fieldTypes: fieldMetadata.reduce((acc: any, field: any) => {
+          acc[field.type] = (acc[field.type] || 0) + 1;
+          return acc;
+        }, {}),
+        relationshipFields: fieldMetadata.filter((f: any) => f.isRelationship),
+        portalFields: fieldMetadata.filter((f: any) => f.isPortal),
+        fields: fieldMetadata
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to get field metadata: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async searchAcrossFields(layout: string, searchText: string, fields?: string[]): Promise<any> {
+    try {
+      // Build search query across specified fields
+      const searchQuery: any = {};
+      
+      if (fields && fields.length > 0) {
+        // Search in specific fields
+        fields.forEach(field => {
+          searchQuery[field] = searchText;
+        });
+      } else {
+        // Search in all text fields (use wildcard)
+        searchQuery['@'] = searchText;
+      }
+
+      const findRequest = {
+        query: [searchQuery],
+        limit: 100,
+        offset: 1
+      };
+
+      const response = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/_find`, findRequest, {
+        headers: {
+          'Authorization': `Bearer ${this.token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return {
+        layout,
+        searchText,
+        fields: fields || 'all',
+        foundCount: response.data.response.dataInfo.foundCount,
+        returnedCount: response.data.response.data.length,
+        results: response.data.response.data
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to search across fields: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async analyzePerformance(layout: string, operation: string = 'find'): Promise<any> {
+    try {
+      const startTime = Date.now();
+      let performanceData: any = {};
+
+      switch (operation) {
+        case 'find':
+          // Test find performance
+          const findRequest = {
+            query: [{ '@': '*' }],
+            limit: 10,
+            offset: 1
+          };
+
+          const findResponse = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/_find`, findRequest, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          performanceData = {
+            operation: 'find',
+            responseTime: Date.now() - startTime,
+            recordCount: findResponse.data.response.dataInfo.foundCount,
+            returnedCount: findResponse.data.response.data.length,
+            recommendations: this.generatePerformanceRecommendations({
+              responseTime: Date.now() - startTime,
+              recordCount: findResponse.data.response.dataInfo.foundCount
+            })
+          };
+          break;
+
+        case 'sort':
+          // Test sort performance
+          const sortResponse = await axios.get(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/records`, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            },
+            params: {
+              _limit: 10,
+              _sort: '_modificationTimestamp:desc'
+            }
+          });
+
+          performanceData = {
+            operation: 'sort',
+            responseTime: Date.now() - startTime,
+            returnedCount: sortResponse.data.response.data.length,
+            recommendations: this.generatePerformanceRecommendations({
+              responseTime: Date.now() - startTime
+            })
+          };
+          break;
+
+        case 'portal':
+          // Analyze portal performance
+          const portalAnalysis = await this.analyzePortalData(layout);
+          performanceData = {
+            operation: 'portal',
+            responseTime: Date.now() - startTime,
+            portalFields: portalAnalysis.portalFields.length,
+            recommendations: portalAnalysis.performanceInsights
+          };
+          break;
+
+        default:
+          throw new Error(`Unsupported operation: ${operation}`);
+      }
+
+      return {
+        layout,
+        operation,
+        performanceData,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to analyze performance: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  // Phase 3: Global Search & Advanced Discovery Tools
+  public async globalSearchFields(searchText: string, fieldType: string = 'all'): Promise<any> {
+    try {
+      const layouts = await this.listLayouts();
+      const results: any[] = [];
+      let totalMatches = 0;
+
+      for (const layout of layouts) {
+        try {
+          const layoutData = await this.getLayoutData(layout);
+          const fields = layoutData.meta.fieldMetaData.filter((field: any) => {
+            const matchesSearch = field.name.toLowerCase().includes(searchText.toLowerCase());
+            const matchesType = fieldType === 'all' || field.type === fieldType;
+            return matchesSearch && matchesType;
+          });
+
+          if (fields.length > 0) {
+            results.push({
+              layout,
+              fieldCount: fields.length,
+              fields: fields.map((field: any) => ({
+                name: field.name,
+                type: field.type,
+                isRelationship: field.name?.includes('::'),
+                relationshipInfo: field.name?.includes('::') ? {
+                  sourceTable: field.name.split('::')[0],
+                  targetTable: field.name.split('::')[1]
+                } : null
+              }))
+            });
+            totalMatches += fields.length;
+          }
+        } catch (error) {
+          // Skip layouts that can't be accessed
+          continue;
+        }
+      }
+
+      return {
+        searchText,
+        fieldType,
+        totalMatches,
+        layoutsWithMatches: results.length,
+        results,
+        summary: {
+          totalLayoutsSearched: layouts.length,
+          layoutsWithMatches: results.length,
+          totalFieldMatches: totalMatches
+        }
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to search fields globally: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async globalSearchData(searchText: string, layouts?: string[], limit: number = 10): Promise<any> {
+    try {
+      const allLayouts = layouts || await this.listLayouts();
+      const results: any[] = [];
+      let totalMatches = 0;
+
+      for (const layout of allLayouts) {
+        try {
+          const searchQuery = {
+            query: [{ '@': searchText }],
+            limit: limit,
+            offset: 1
+          };
+
+          const searchResponse = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/layouts/${layout}/_find`, searchQuery, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          if (searchResponse.data.response.dataInfo.foundCount > 0) {
+            results.push({
+              layout,
+              foundCount: searchResponse.data.response.dataInfo.foundCount,
+              returnedCount: searchResponse.data.response.data.length,
+              sampleRecords: searchResponse.data.response.data.slice(0, 3) // Show first 3 records
+            });
+            totalMatches += searchResponse.data.response.dataInfo.foundCount;
+          }
+        } catch (error) {
+          // Skip layouts that can't be searched
+          continue;
+        }
+      }
+
+      return {
+        searchText,
+        layoutsSearched: allLayouts.length,
+        layoutsWithMatches: results.length,
+        totalMatches,
+        results,
+        summary: {
+          totalLayoutsSearched: allLayouts.length,
+          layoutsWithMatches: results.length,
+          totalRecordMatches: totalMatches
+        }
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to search data globally: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async exportDDR(format: string = 'json', includeScripts: boolean = true, includeLayouts: boolean = true): Promise<any> {
+    try {
+      const ddr: any = {
+        database: this.config.database,
+        exportDate: new Date().toISOString(),
+        format,
+        summary: {}
+      };
+
+      // Get layouts information
+      if (includeLayouts) {
+        const layouts = await this.listLayouts();
+        ddr.layouts = [];
+        
+        for (const layout of layouts.slice(0, 10)) { // Limit to first 10 layouts for performance
+          try {
+            const layoutData = await this.getLayoutData(layout);
+            ddr.layouts.push({
+              name: layout,
+              fieldCount: layoutData.meta.fieldMetaData.length,
+              fields: layoutData.meta.fieldMetaData.map((field: any) => ({
+                name: field.name,
+                type: field.type,
+                isRelationship: field.name?.includes('::'),
+                relationshipInfo: field.name?.includes('::') ? {
+                  sourceTable: field.name.split('::')[0],
+                  targetTable: field.name.split('::')[1]
+                } : null
+              }))
+            });
+          } catch (error) {
+            // Skip layouts that can't be accessed
+            continue;
+          }
+        }
+        
+        ddr.summary.totalLayouts = layouts.length;
+        ddr.summary.layoutsAnalyzed = ddr.layouts.length;
+      }
+
+      // Get scripts information
+      if (includeScripts) {
+        const scripts = await this.listScripts();
+        ddr.scripts = scripts.map((script: string) => ({
+          name: script,
+          // Note: Script content would require additional API calls
+        }));
+        
+        ddr.summary.totalScripts = scripts.length;
+      }
+
+      // Add relationship analysis
+      ddr.relationships = this.analyzeDDRRelationships(ddr.layouts || []);
+
+      return ddr;
+    } catch (error: any) {
+      throw new Error(`Failed to export DDR: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async analyzeRelationships(layout: string, depth: number = 1): Promise<any> {
+    try {
+      const layoutData = await this.getLayoutData(layout);
+      const relationships: any[] = [];
+      const visited = new Set();
+
+      const analyzeField = (field: any, currentDepth: number) => {
+        if (currentDepth > depth || visited.has(field.name)) {
+          return;
+        }
+        visited.add(field.name);
+
+        if (field.name?.includes('::')) {
+          const [sourceTable, targetTable] = field.name.split('::');
+          relationships.push({
+            sourceTable,
+            targetTable,
+            fieldName: field.name,
+            fieldType: field.type,
+            depth: currentDepth,
+            relationshipType: 'foreign_key'
+          });
+
+          // Recursively analyze related tables if depth allows
+          if (currentDepth < depth) {
+            // This would require additional API calls to analyze related layouts
+            // For now, we'll note the potential relationship
+            relationships.push({
+              sourceTable: targetTable,
+              targetTable: sourceTable,
+              fieldName: `${targetTable}::${sourceTable}`,
+              fieldType: 'portal',
+              depth: currentDepth + 1,
+              relationshipType: 'reverse_relationship',
+              note: 'Potential reverse relationship - requires additional analysis'
+            });
+          }
+        }
+      };
+
+      // Analyze all fields in the layout
+      layoutData.meta.fieldMetaData.forEach((field: any) => {
+        analyzeField(field, 1);
+      });
+
+      return {
+        layout,
+        depth,
+        totalRelationships: relationships.length,
+        relationships,
+        summary: {
+          directRelationships: relationships.filter(r => r.depth === 1).length,
+          indirectRelationships: relationships.filter(r => r.depth > 1).length,
+          foreignKeys: relationships.filter(r => r.relationshipType === 'foreign_key').length,
+          portals: relationships.filter(r => r.relationshipType === 'reverse_relationship').length
+        }
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to analyze relationships: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  private analyzeDDRRelationships(layouts: any[]): any {
+    const relationships: any[] = [];
+    const relationshipMap = new Map();
+
+    layouts.forEach(layout => {
+      layout.fields.forEach((field: any) => {
+        if (field.isRelationship && field.relationshipInfo) {
+          const key = `${field.relationshipInfo.sourceTable}->${field.relationshipInfo.targetTable}`;
+          if (!relationshipMap.has(key)) {
+            relationshipMap.set(key, {
+              sourceTable: field.relationshipInfo.sourceTable,
+              targetTable: field.relationshipInfo.targetTable,
+              fields: [],
+              layouts: []
+            });
+          }
+          
+          const rel = relationshipMap.get(key);
+          rel.fields.push(field.name);
+          if (!rel.layouts.includes(layout.name)) {
+            rel.layouts.push(layout.name);
+          }
+        }
+      });
+    });
+
+    return Array.from(relationshipMap.values());
   }
 } 

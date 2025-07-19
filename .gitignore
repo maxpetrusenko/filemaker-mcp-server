@@ -1,3 +1,18 @@
 .env
 .npmrc
 test-files/
+
+# Package archives (keep only latest)
+*.tgz
+*.tar.gz
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db

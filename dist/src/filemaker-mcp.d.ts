@@ -140,4 +140,20 @@ export declare class FileMakerMCP {
     private testQueryPerformance;
     private testBatchPerformance;
     private generatePerformanceRecommendations;
+    listLayouts(): Promise<string[]>;
+    listScripts(): Promise<string[]>;
+    getRecordCount(layout: string): Promise<number>;
+    listValueLists(): Promise<Array<{
+        name: string;
+        items: string[];
+    }>>;
+    analyzePortalData(layout: string): Promise<any>;
+    getFieldMetadata(layout: string): Promise<any>;
+    searchAcrossFields(layout: string, searchText: string, fields?: string[]): Promise<any>;
+    analyzePerformance(layout: string, operation?: string): Promise<any>;
+    globalSearchFields(searchText: string, fieldType?: string): Promise<any>;
+    globalSearchData(searchText: string, layouts?: string[], limit?: number): Promise<any>;
+    exportDDR(format?: string, includeScripts?: boolean, includeLayouts?: boolean): Promise<any>;
+    analyzeRelationships(layout: string, depth?: number): Promise<any>;
+    private analyzeDDRRelationships;
 }
