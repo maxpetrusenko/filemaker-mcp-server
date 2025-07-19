@@ -142,6 +142,7 @@ export declare class FileMakerMCP {
     private generatePerformanceRecommendations;
     listLayouts(): Promise<string[]>;
     listScripts(): Promise<string[]>;
+    discoverHiddenScripts(): Promise<any>;
     getRecordCount(layout: string): Promise<number>;
     listValueLists(): Promise<Array<{
         name: string;

@@ -654,6 +654,15 @@ export class FileMakerMCP {
             },
           },
           {
+            name: 'fm_discover_hidden_scripts',
+            description: 'Discover hidden scripts that exist but are not visible in the standard script list',
+            inputSchema: {
+              type: 'object',
+              properties: {},
+              required: []
+            },
+          },
+          {
             name: 'fm_get_record_count',
             description: 'Get the total number of records in a specified layout',
             inputSchema: {
@@ -908,6 +917,21 @@ export class FileMakerMCP {
                };
              } catch (error: any) {
                throw new Error(`Failed to list scripts: ${error.message}`);
+             }
+
+           case 'fm_discover_hidden_scripts':
+             try {
+               const discovery = await this.discoverHiddenScripts();
+               return {
+                 content: [
+                   {
+                     type: 'text',
+                     text: JSON.stringify(discovery, null, 2)
+                   }
+                 ]
+               };
+             } catch (error: any) {
+               throw new Error(`Failed to discover hidden scripts: ${error.message}`);
              }
 
                                 case 'fm_get_record_count':
@@ -2688,9 +2712,83 @@ export class FileMakerMCP {
         }
       });
       
-      return response.data.response.scripts.map((script: any) => script.name);
+      const scripts = response.data.response.scripts.map((script: any) => script.name);
+      
+      // Debug: Log the scripts found
+      fs.writeFileSync('/tmp/filemaker-scripts-debug.log', 
+        `Found ${scripts.length} scripts: ${JSON.stringify(scripts, null, 2)}`, 'utf8');
+      
+      return scripts;
     } catch (error: any) {
       throw new Error(`Failed to list scripts: ${error.response?.data?.messages?.[0]?.message || error.message}`);
+    }
+  }
+
+  public async discoverHiddenScripts(): Promise<any> {
+    try {
+      // Get the standard script list
+      const standardScripts = await this.listScripts();
+      
+      // Try to discover additional scripts by attempting to execute common script names
+      const commonScriptNames = [
+        'test-exit', 'test', 'exit', 'hello', 'hello-world', 'test-hello',
+        'debug', 'debug-script', 'system', 'admin', 'setup', 'init',
+        'startup', 'shutdown', 'main', 'default', 'index', 'home'
+      ];
+      
+      const discoveredScripts: any[] = [];
+      const failedAttempts: string[] = [];
+      
+      for (const scriptName of commonScriptNames) {
+        // Skip if already in standard list
+        if (standardScripts.includes(scriptName)) {
+          continue;
+        }
+        
+        try {
+          // Try to execute the script to see if it exists
+          const response = await axios.post(`${this.config.host}/fmi/data/v1/databases/${this.config.database}/scripts/${scriptName}`, {}, {
+            headers: {
+              'Authorization': `Bearer ${this.token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          // If we get here, the script exists and is executable
+          discoveredScripts.push({
+            name: scriptName,
+            status: 'executable',
+            response: response.data.response?.scriptResult || 'No result'
+          });
+        } catch (error: any) {
+          // Script doesn't exist or can't be executed
+          failedAttempts.push(scriptName);
+        }
+      }
+      
+      return {
+        standardScripts: {
+          count: standardScripts.length,
+          scripts: standardScripts
+        },
+        hiddenScripts: {
+          count: discoveredScripts.length,
+          scripts: discoveredScripts
+        },
+        totalScripts: standardScripts.length + discoveredScripts.length,
+        failedAttempts: {
+          count: failedAttempts.length,
+          scripts: failedAttempts
+        },
+        summary: {
+          totalDiscovered: standardScripts.length + discoveredScripts.length,
+          standardScripts: standardScripts.length,
+          hiddenScripts: discoveredScripts.length,
+          failedAttempts: failedAttempts.length
+        }
+      };
+    } catch (error: any) {
+      throw new Error(`Failed to discover hidden scripts: ${error.response?.data?.messages?.[0]?.message || error.message}`);
     }
   }
 
