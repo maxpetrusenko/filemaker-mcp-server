@@ -1,4 +1,4 @@
-# FileMaker MCP Server v2.5.0
+# FileMaker MCP Server v2.5.10
 
 A comprehensive Model Context Protocol (MCP) server for FileMaker Data API integration, providing intelligent tools for database discovery, analysis, and management.
 
@@ -7,6 +7,7 @@ A comprehensive Model Context Protocol (MCP) server for FileMaker Data API integ
 ### **Phase 1: Core Discovery Tools**
 - **`fm_list_layouts`** - List all layouts in the database
 - **`fm_list_scripts`** - List all scripts in the database  
+- **`fm_discover_hidden_scripts`** - Discover hidden scripts not visible in standard list
 - **`fm_get_record_count`** - Get total record count for any layout
 - **`fm_list_value_lists`** - List value lists (requires script approach)
 
@@ -30,27 +31,21 @@ A comprehensive Model Context Protocol (MCP) server for FileMaker Data API integ
 - **`fm_execute_script`** - Execute FileMaker scripts
 - **`fm_get_layout_metadata`** - Get layout structure and field information
 
-### **Advanced Features**
-- **Git Integration** - Version control for FileMaker components
-- **Intelligent Debugging** - Script analysis and optimization
-- **API Enhancements** - Batch operations, caching, performance monitoring
-- **Error Handling** - Comprehensive error resolution and prevention
-
 ## 📦 Installation
 
-### For Claude Desktop
-1. Install the package:
-```bash
-npm install -g filemaker-mcp-server-v2@2.5.0
-```
+### **Option 1: Direct Installation (Recommended)**
 
-2. Add to your MCP configuration:
+#### For Claude Desktop
+1. Add to your MCP configuration:
 ```json
 {
   "mcpServers": {
     "filemaker": {
       "command": "npx",
-      "args": ["filemaker-mcp-server-v2@2.5.0"],
+      "args": [
+        "-y",
+        "@maxpetrusenko/filemaker-mcp-server@latest"
+      ],
       "env": {
         "FILEMAKER_HOST": "https://your-filemaker-server.com",
         "FILEMAKER_DATABASE": "your-database-name",
@@ -62,12 +57,102 @@ npm install -g filemaker-mcp-server-v2@2.5.0
 }
 ```
 
-### For Development
+#### For Development
 ```bash
-git clone <repository>
+# Clone the repository
+git clone https://github.com/maxpetrusenko/filemaker-mcp-server.git
 cd filemaker-mcp-server
+
+# Install dependencies
 npm install
+
+# Build the project
 npm run build
+
+# Run locally with environment variables
+FILEMAKER_HOST="https://your-filemaker-server.com" \
+FILEMAKER_DATABASE="your-database-name" \
+FILEMAKER_USERNAME="your-username" \
+FILEMAKER_PASSWORD="your-password" \
+npm start
+```
+
+### **Option 2: Docker Installation**
+
+#### Build and Run with Docker
+```bash
+# Build the Docker image
+docker build -t filemaker-mcp-server .
+
+# Run with environment variables
+docker run -it --rm \
+  -e FILEMAKER_HOST="https://your-filemaker-server.com" \
+  -e FILEMAKER_DATABASE="your-database-name" \
+  -e FILEMAKER_USERNAME="your-username" \
+  -e FILEMAKER_PASSWORD="your-password" \
+  filemaker-mcp-server
+```
+
+#### Docker Compose (Recommended for Production)
+Create a `docker-compose.yml` file:
+```yaml
+version: '3.8'
+services:
+  filemaker-mcp:
+    build: .
+    environment:
+      - FILEMAKER_HOST=https://your-filemaker-server.com
+      - FILEMAKER_DATABASE=your-database-name
+      - FILEMAKER_USERNAME=your-username
+      - FILEMAKER_PASSWORD=your-password
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+```
+
+Run with:
+```bash
+docker-compose up -d
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Required | Example |
+|----------|-------------|----------|---------|
+| `FILEMAKER_HOST` | FileMaker server URL | Yes | `https://your-server.com` |
+| `FILEMAKER_DATABASE` | Database name | Yes | `my-database` |
+| `FILEMAKER_USERNAME` | Username for authentication | Yes | `API` |
+| `FILEMAKER_PASSWORD` | Password for authentication | Yes | `your-password` |
+
+### Claude Desktop Configuration
+
+Add this to your Claude Desktop MCP configuration file:
+
+**macOS/Linux**: `~/.config/claude-desktop/mcp-servers.json`
+**Windows**: `%APPDATA%\claude-desktop\mcp-servers.json`
+
+```json
+{
+  "mcpServers": {
+    "filemaker": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@maxpetrusenko/filemaker-mcp-server@latest"
+      ],
+      "env": {
+        "FILEMAKER_HOST": "https://your-filemaker-server.com",
+        "FILEMAKER_DATABASE": "your-database-name",
+        "FILEMAKER_USERNAME": "your-username",
+        "FILEMAKER_PASSWORD": "your-password"
+      }
+    }
+  }
+}
 ```
 
 ## 🛠️ Tool Reference
@@ -94,6 +179,20 @@ Lists all scripts in the FileMaker database.
 {
   "name": "fm_list_scripts", 
   "description": "List all scripts in the FileMaker database",
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}
+```
+
+#### `fm_discover_hidden_scripts`
+Discovers hidden scripts that exist but are not visible in the standard script list.
+```json
+{
+  "name": "fm_discover_hidden_scripts",
+  "description": "Discover hidden scripts that exist but are not visible in the standard script list",
   "inputSchema": {
     "type": "object",
     "properties": {},
@@ -251,182 +350,225 @@ Analyze relationships between tables and identify foreign keys.
   "inputSchema": {
     "type": "object",
     "properties": {
-      "layout": { "type": "string", "description": "Layout to analyze relationships for" },
-      "depth": { "type": "number", "description": "Relationship depth to analyze (1-3)" }
+      "layout": { "type": "string", "description": "Layout to analyze" },
+      "includeDetails": { "type": "boolean", "description": "Include detailed relationship information" }
     },
     "required": ["layout"]
   }
 }
 ```
 
-## 🔍 SQL vs FileMaker Data API
+### Data Operations
 
-**FileMaker Data API does NOT support direct SQL execution**, but provides equivalent functionality:
-
-### SQL to FileMaker Data API Mapping
-
-| SQL | FileMaker Data API |
-|-----|-------------------|
-| `SELECT * FROM table` | `GET /layouts/{layout}/records` |
-| `WHERE field = value` | `POST /layouts/{layout}/_find` with query |
-| `ORDER BY field DESC` | `sort: [{fieldName: "field", sortOrder: "descend"}]` |
-| `LIMIT 10 OFFSET 20` | `limit: 10, offset: 20` |
-| `SELECT field1, field2` | `fields: ["field1", "field2"]` |
-
-### Example Conversion
-```sql
--- SQL Query
-SELECT * FROM Price 
-WHERE currentPrice > 1000000 
-ORDER BY currentPrice DESC 
-LIMIT 5;
-```
-
-```javascript
-// FileMaker Data API equivalent
+#### `fm_find_records`
+Find records using FileMaker Data API find syntax.
+```json
 {
-  query: [{ currentPrice: ">1000000" }],
-  sort: [{ fieldName: "currentPrice", sortOrder: "descend" }],
-  limit: 5
+  "name": "fm_find_records",
+  "description": "Find records using FileMaker Data API find syntax",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" },
+      "query": { "type": "array", "items": { "type": "object" }, "description": "Find query array" },
+      "limit": { "type": "number", "description": "Maximum number of records to return" },
+      "offset": { "type": "number", "description": "Number of records to skip" }
+    },
+    "required": ["layout", "query"]
+  }
 }
 ```
 
-## 🐳 Docker Support
-
-### Dockerfile
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
+#### `fm_create_record`
+Create a new record in the specified layout.
+```json
+{
+  "name": "fm_create_record",
+  "description": "Create a new record in the specified layout",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" },
+      "fieldData": { "type": "object", "description": "Field data to insert" }
+    },
+    "required": ["layout", "fieldData"]
+  }
+}
 ```
 
-### Docker Compose
-```yaml
-version: '3.8'
-services:
-  filemaker-mcp:
-    build: .
-    environment:
-      - FILEMAKER_HOST=https://your-filemaker-server.com
-      - FILEMAKER_DATABASE=your-database-name
-      - FILEMAKER_USERNAME=your-username
-      - FILEMAKER_PASSWORD=your-password
-    ports:
-      - "3000:3000"
+#### `fm_update_record`
+Update an existing record.
+```json
+{
+  "name": "fm_update_record",
+  "description": "Update an existing record",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" },
+      "recordId": { "type": "number", "description": "Record ID to update" },
+      "fieldData": { "type": "object", "description": "Field data to update" }
+    },
+    "required": ["layout", "recordId", "fieldData"]
+  }
+}
 ```
 
-## 🔧 Development
+#### `fm_delete_record`
+Delete a record from the database.
+```json
+{
+  "name": "fm_delete_record",
+  "description": "Delete a record from the database",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" },
+      "recordId": { "type": "number", "description": "Record ID to delete" }
+    },
+    "required": ["layout", "recordId"]
+  }
+}
+```
 
-### Prerequisites
-- Node.js 18+
-- TypeScript
-- FileMaker Server with Data API enabled
+#### `fm_execute_script`
+Execute a FileMaker script.
+```json
+{
+  "name": "fm_execute_script",
+  "description": "Execute a FileMaker script",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "script": { "type": "string", "description": "Script name to execute" },
+      "parameters": { "type": "string", "description": "Script parameters" }
+    },
+    "required": ["script"]
+  }
+}
+```
 
-### Setup
+#### `fm_get_layout_metadata`
+Get layout structure and field information.
+```json
+{
+  "name": "fm_get_layout_metadata",
+  "description": "Get layout structure and field information",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "layout": { "type": "string", "description": "Layout name" }
+    },
+    "required": ["layout"]
+  }
+}
+```
+
+## 🧪 Testing
+
+### Local Testing
 ```bash
+# Test with environment variables
+FILEMAKER_HOST="https://your-filemaker-server.com" \
+FILEMAKER_DATABASE="your-database-name" \
+FILEMAKER_USERNAME="your-username" \
+FILEMAKER_PASSWORD="your-password" \
+npm test
+```
+
+### Docker Testing
+```bash
+# Test Docker build
+docker build -t filemaker-mcp-test .
+
+# Test Docker run
+docker run -it --rm \
+  -e FILEMAKER_HOST="https://your-filemaker-server.com" \
+  -e FILEMAKER_DATABASE="your-database-name" \
+  -e FILEMAKER_USERNAME="your-username" \
+  -e FILEMAKER_PASSWORD="your-password" \
+  filemaker-mcp-test
+```
+
+## 🔍 Troubleshooting
+
+### Common Issues
+
+1. **"Server disconnected" error in Claude Desktop**
+   - Ensure environment variables are correctly set
+   - Check FileMaker server connectivity
+   - Verify database name and credentials
+
+2. **"Layout is missing" error**
+   - Verify layout name exists in the database
+   - Check case sensitivity of layout names
+
+3. **"Circular JSON structure" error**
+   - This has been fixed in v2.5.10
+   - Update to the latest version
+
+4. **Global search returns 0 matches**
+   - Check field names for exact matches
+   - Verify search text case sensitivity
+   - Check debug logs in `/tmp/filemaker-global-search-debug.log`
+
+### Log Files
+The server creates log files in `/tmp/` directory:
+- `/tmp/filemaker-mcp.log` - General server logs
+- `/tmp/filemaker-global-search-debug.log` - Global search debugging
+- `/tmp/filemaker-method-called.log` - Method call tracking
+
+## 📝 Development
+
+### Project Structure
+```
+filemaker-mcp-server/
+├── src/
+│   ├── filemaker-mcp.ts    # Main MCP server implementation
+│   └── index.ts           # Entry point
+├── dist/                  # Compiled JavaScript
+├── Dockerfile            # Docker configuration
+├── docker-compose.yml    # Docker Compose configuration
+├── package.json          # Node.js dependencies
+└── README.md            # This file
+```
+
+### Building
+```bash
+# Install dependencies
 npm install
+
+# Build TypeScript
 npm run build
-npm test
-```
 
-### Testing
-```bash
-# Run all tests
+# Run tests
 npm test
 
-# Run specific test
-npm test -- test-files/test-phase1-tools.js
-
-# Run E2E tests
-npm run test:e2e
+# Start development server
+npm start
 ```
 
-## 📊 Performance Optimization
-
-### Best Practices
-1. **Use Find Queries** instead of loading all records
-2. **Implement Pagination** for large datasets
-3. **Cache Frequently Used Data** using the built-in cache system
-4. **Monitor Performance** using `fm_analyze_performance`
-5. **Optimize Portal Loading** using `fm_analyze_portal_data`
-
-### Performance Monitoring
-```javascript
-// Analyze find performance
-await fm_analyze_performance({
-  layout: "@Price",
-  operation: "find"
-});
-
-// Analyze portal performance  
-await fm_analyze_performance({
-  layout: "@Unit",
-  operation: "portal"
-});
-```
-
-## 🔒 Security
-
-### Authentication
-- Uses FileMaker Data API token-based authentication
-- Tokens are automatically refreshed
-- Supports both username/password and OAuth
-
-### Error Handling
-- Comprehensive error messages
-- Automatic retry mechanisms
-- Rate limiting protection
-
-## 📈 Roadmap
-
-### Phase 3: Advanced Management (Planned)
-- **`fm_export_ddr`** - Export Database Design Report
-- **`fm_manage_users`** - User and permission management
-- **`fm_backup_restore`** - Database backup and restore operations
-- **`fm_sync_data`** - Data synchronization between databases
-
-### Phase 4: AI Integration (Planned)
-- **`fm_ai_analyze`** - AI-powered data analysis
-- **`fm_ai_optimize`** - AI-driven performance optimization
-- **`fm_ai_generate`** - AI-generated reports and insights
-
-## 🤝 Contributing
-
+### Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Add tests
+4. Add tests if applicable
 5. Submit a pull request
 
 ## 📄 License
 
-MIT License - see LICENSE file for details
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🆘 Support
+## 🤝 Support
 
-- **Documentation**: [README.md](README.md)
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
+For support and questions:
+- Create an issue on GitHub
+- Check the troubleshooting section above
+- Review the log files for detailed error information
 
-## 🔄 Changelog
+## 🔄 Version History
 
-### v2.4.0 (Current)
-- ✅ Added Phase 2 Advanced Analysis Tools
-- ✅ Enhanced performance monitoring
-- ✅ Improved error handling
-- ✅ Updated documentation
-
-### v2.3.0
-- ✅ Added Phase 1 Core Discovery Tools
-- ✅ Fixed script execution endpoint
-- ✅ Improved authentication handling
-
-### v2.2.x
-- ✅ Core MCP server functionality
-- ✅ Basic FileMaker Data API integration
-- ✅ Git integration features
+- **v2.5.10** - Fixed circular JSON structure, added hidden script discovery, improved error handling
+- **v2.5.9** - Fixed read-only file system issues, improved logging
+- **v2.5.8** - Fixed MCP SDK compatibility and package structure
+- **v2.5.0** - Initial release with comprehensive FileMaker Data API integration

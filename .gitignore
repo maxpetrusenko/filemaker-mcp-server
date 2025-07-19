@@ -2,6 +2,9 @@
 .npmrc
 test-files/
 node_modules/
+.cursor/
+.github/
+.vscode/
 
 # Package archives (keep only latest)
 *.tgz

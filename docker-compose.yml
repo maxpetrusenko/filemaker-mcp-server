@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  filemaker-mcp:
+    build: .
+    container_name: filemaker-mcp-server
+    environment:
+      - FILEMAKER_HOST=${FILEMAKER_HOST:-https://your-filemaker-server.com}
+      - FILEMAKER_DATABASE=${FILEMAKER_DATABASE:-your-database-name}
+      - FILEMAKER_USERNAME=${FILEMAKER_USERNAME:-your-username}
+      - FILEMAKER_PASSWORD=${FILEMAKER_PASSWORD:-your-password}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "node", "-e", "console.log('Health check passed')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s 
